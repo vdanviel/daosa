@@ -1,26 +1,125 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* DAOSA brand: medium purple primary, deep-purple foreground, white bg */
+    --background: 0 0% 100%;
+    --foreground: 255 55% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 255 55% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 255 55% 12%;
+    --primary: 252 72% 62%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 258 80% 82%;
+    --primary-dark: 255 78% 20%;
+    --secondary: 252 40% 94%;
+    --secondary-foreground: 255 55% 12%;
+    --muted: 250 30% 93%;
+    --muted-foreground: 252 25% 50%;
+    --accent: 252 72% 62%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 252 30% 88%;
+    --input: 252 30% 88%;
+    --ring: 252 72% 62%;
+    --chart-1: 252 72% 62%;
+    --chart-2: 275 60% 55%;
+    --chart-3: 220 70% 55%;
+    --chart-4: 340 75% 55%;
+    --chart-5: 38 90% 55%;
+    --radius: 0.75rem;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --error: 0 84% 60%;
+  }
+
+  .dark {
+    --background: 255 55% 7%;
+    --foreground: 252 30% 95%;
+    --card: 255 45% 11%;
+    --card-foreground: 252 30% 95%;
+    --popover: 255 45% 11%;
+    --popover-foreground: 252 30% 95%;
+    --primary: 252 72% 68%;
+    --primary-foreground: 255 55% 7%;
+    --secondary: 255 35% 18%;
+    --secondary-foreground: 252 30% 95%;
+    --muted: 255 35% 18%;
+    --muted-foreground: 252 30% 60%;
+    --accent: 252 72% 68%;
+    --accent-foreground: 255 55% 7%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 255 35% 22%;
+    --input: 255 35% 22%;
+    --ring: 252 72% 68%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .bg-radial-fade {
+    background: radial-gradient(ellipse 90% 55% at 50% -5%, hsl(var(--primary) / 0.18), transparent 65%);
+  }
+  .glass {
+    background: hsl(var(--card) / 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  /* Purple gradient matching the DAOSA logo */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(252, 72%, 55%), hsl(258, 80%, 75%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, hsl(252, 72%, 55%) 0%, hsl(258, 70%, 72%) 100%);
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(2deg); }
+  }
+  .animate-fade-up {
+    animation: fadeUp 0.55s ease-out both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-glow {
+    animation: glow 3s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 12px hsl(252, 72%, 62% / 0.5)); }
+    50% { filter: drop-shadow(0 0 28px hsl(252, 72%, 62% / 0.8)); }
+  }
+  /* Sidebar active gradient */
+  .nav-active {
+    background: linear-gradient(90deg, hsl(252, 72%, 55%) 0%, hsl(258, 65%, 65%) 100%);
+    color: white;
+    box-shadow: 0 2px 12px hsl(252, 72%, 55% / 0.35);
+  }
 }
