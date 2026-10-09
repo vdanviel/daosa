@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Confirmação de Mudança de E-mail</title>
+
+    <style>
+        html {
+            color: #333333;
+        }
+        body {
+            color: #333333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f4f4f4;
+        }
+        .content {
+            padding: 20px;
+            padding-bottom: 0px;
+        }
+        .footer {
+            padding: 20px;
+            font-size: 0.8em;
+            color: #666666;
+        }
+        .action-button {
+            display: block;
+            width: 80%;
+            max-width: 250px;
+            background-color: #333333;
+            color: #ffffff !important;
+            padding: 15px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 25px auto;
+            text-align: center;
+        }
+        .info-box {
+            background-color: #f8f8f8;
+            border-left: 4px solid #333333;
+            padding: 12px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+        .secondary-link {
+            color: #666666;
+            font-size: 0.8em;
+            text-align: center;
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr align="center">
+                <td bgcolor="#ffffff" style="padding: 30px;">
+                    <img style="width: 80px;" src="https://placehold.co/600x400/000000/FFFFFF/png" alt="Logo da Empresa">
+                </td>
+            </tr>
+            <tr align="left">
+                <td bgcolor="#ffffff" class="content">
+                    <p style="color: #333333;">Olá {name},</p>
+
+                    <p style="color: #333333;">
+                        Recebemos uma solicitação para alterar o e-mail associado à sua conta. Clique no botão abaixo para confirmar esta mudança:
+                    </p>
+
+                    <a href="{host}/change-email?eml={email}&c={code}&srct={secret}" target="_blank" class="action-button">
+                        Confirmar Mudança de E-mail
+                    </a>
+
+                    <p style="text-align: center; color: #666666; font-size: 0.8em;">
+                        Ou copie e cole este link no seu navegador:<br>
+                        <span style="word-break: break-all;">{host}/change-email?eml={email}&c={code}&srct={secret}</span>
+                    </p>
+
+                    <div class="info-box">
+                        <p style="color: #333333; margin: 0;">
+                            <strong>Importante:</strong> Este link expira em 30 minutos. Após a confirmação, todos os futuros comunicados serão enviados para o novo endereço.
+                        </p>
+                    </div>
+
+                    <p style="color: #333333;">
+                        Se você não solicitou esta alteração, por favor, ignore este e-mail ou <a href="mailto:suporte@empresa.com" style="color: #333333;">entre em contato</a> com nosso suporte imediatamente.
+                    </p>
+                </td>
+            </tr>
+            <tr align="center">
+                <td bgcolor="#ffffff" class="footer">
+                    <a href="#" style="margin-right: 10px;">
+                        <img src="https://placehold.co/600x400/000000/FFFFFF/png" alt="Instagram" width="25" height="25">
+                    </a>
+                    <a href="#" style="margin-right: 10px;">
+                        <img src="https://placehold.co/600x400/000000/FFFFFF/png" alt="WhatsApp" width="25" height="25">
+                    </a>
+                </td>
+            </tr>
+            <tr align="center">
+                <td bgcolor="#f4f4f4">
+                    <p style="color: #666666;">{company} ⓒ Todos os direitos reservados.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
