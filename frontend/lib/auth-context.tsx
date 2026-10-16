@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { Env } from './env';
 
 export interface User {
   id: string;
@@ -38,7 +39,7 @@ const AuthContext = createContext<AuthContextValue>({
   refreshUser: async () => {},
 });
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
+const API_BASE = Env.get('API_BASE_URL');
 
 async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;

@@ -1,16 +1,14 @@
-import dotenv from 'dotenv';
 import { Sequelize } from 'sequelize';
-
-dotenv.config();
+import Env from '../util/Env.js';
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || '',
-  process.env.DB_USER || '',
-  process.env.DB_PASSWORD || '',
+  Env.getDbName(),
+  Env.getDbUser(),
+  Env.getDbPassword(),
   {
-    host: process.env.DB_HOST || '127.0.0.1',
-    port: Number(process.env.DB_PORT || 3306),
-    dialect: process.env.DB_DIALECT || 'mysql',
+    host: Env.getDbHost(),
+    port: Env.getDbPort(),
+    dialect: Env.getDbDialect(),
     logging: false
   }
 );

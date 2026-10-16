@@ -1,7 +1,5 @@
-import dotenv from 'dotenv'
 import nodemailer from 'nodemailer';
-
-dotenv.config();
+import Env from '../util/Env.js';
 
 class MailManager {
 
@@ -9,17 +7,17 @@ class MailManager {
       
         this.transport = {
             sendEmail: true,
-            host: process.env.MAIL_HOST,
-            port: process.env.MAIL_PORT, //465 to SSL
+            host: Env.getMailHost(),
+            port: Env.getMailPort(), //465 to SSL
             secure: false,
             auth: {
-                user: process.env.MAIL_USERNAME,
-                pass: process.env.MAIL_PASSWORD
+                user: Env.getMailUsername(),
+                pass: Env.getMailPassword()
             },
         }
 
-        this.from = process.env.MAIL_FROM_ADDRESS;
-        this.fromName = process.env.MAIL_FROM_NAME;
+        this.from = Env.getMailFromAddress();
+        this.fromName = Env.getMailFromName();
 
     }
 

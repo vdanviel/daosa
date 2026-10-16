@@ -1,5 +1,6 @@
 import path from "node:path";
 import url from 'url';
+import Env from './Env.js';
 
 class Utils {
 
@@ -18,6 +19,32 @@ class Utils {
     return code;
 
   }
+
+  static isValidDocument(document) {
+    const digits = String(document ?? '').replace(/\D/g, '');
+
+    if (digits.length === 11) {
+        if (/^(\d)\1{10}$/.test(digits)) return false;
+        const numbers = digits.split('').map(Number);
+        const first = (numbers.slice(0, 9).reduce((sum, digit, index) => sum + digit * (10 - index), 0) * 10) % 11 % 10;
+        const second = (numbers.slice(0, 10).reduce((sum, digit, index) => sum + digit * (11 - index), 0) * 10) % 11 % 10;
+        return first === numbers[9] && second === numbers[10];
+    }
+
+    if (digits.length === 14) {
+        if (/^(\d)\1{13}$/.test(digits)) return false;
+        const calculateDigit = (base, weights) => {
+            const remainder = base.reduce((sum, digit, index) => sum + digit * weights[index], 0) % 11;
+            return remainder < 2 ? 0 : 11 - remainder;
+        };
+        const numbers = digits.split('').map(Number);
+        const first = calculateDigit(numbers.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+        const second = calculateDigit(numbers.slice(0, 12).concat(first), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+        return first === numbers[12] && second === numbers[13];
+    }
+
+    return false;
+};
 
   static formatDate(date) {
     try {
@@ -43,13 +70,29 @@ class Utils {
   }
 
   static getCurrentEnroviment(){
-    cEnv = process.env.CURRENT_ENVIRONMENT;
-
-    if (cEnv == "prod") {
+    if (Env.getCurrentEnvironment() === "prod") {
       return "prod"
     }else{
       return "dev"
     }
+
+  }
+
+  static getSessionSecret(){
+
+    return Env.getSessionSecretPass();
+
+  }
+
+  static getSpaUrl(){
+
+    return Env.getSpaApplicationUrl();
+
+  }
+
+  static getPort(){
+
+    return Env.getPort();
 
   }
 

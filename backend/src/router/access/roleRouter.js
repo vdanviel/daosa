@@ -20,11 +20,11 @@ const validateDataUpdated = [
 ];
 
 // Buscar por ID
-roleRouter.get('/:id', isAuth(), checkScope(['read:role']), (req, res) => {
+roleRouter.get('/:id', isAuth(), checkScope(['read:role']), (req, res, next) => {
 	roleController.findById(req.params.id)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Buscar todos paginado
@@ -32,15 +32,15 @@ roleRouter.get('/', [
 	query('page').optional().exists().withMessage('O page precisa estar presente.'),
 	query('size').optional().exists().withMessage('O size precisa estar presente.'),
 	query('search').optional().exists().withMessage('O search precisa estar presente.')
-], isAuth(), checkScope(['read:role']), (req, res) => {
+], isAuth(), checkScope(['read:role']), (req, res, next) => {
 	roleController.all(req.query.page, req.query.size, req.query.search)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Criar novo registro
-roleRouter.post('/register', validateData, isAuth(), checkScope(['write:role']), (req, res) => {
+roleRouter.post('/register', validateData, isAuth(), checkScope(['write:role']), (req, res, next) => {
 
 	// Validação dos dados recebidos
 	const errors = validationResult(req);
@@ -52,11 +52,11 @@ roleRouter.post('/register', validateData, isAuth(), checkScope(['write:role']),
 	roleController.create(name, permissions, description)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Atualizar registro
-roleRouter.put('/update/:id', isAuth(), checkScope(['update:role']), validateDataUpdated, (req, res) => {
+roleRouter.put('/update/:id', isAuth(), checkScope(['update:role']), validateDataUpdated, (req, res, next) => {
 
 	// Validação dos dados recebidos
 	const errors = validationResult(req);
@@ -68,15 +68,15 @@ roleRouter.put('/update/:id', isAuth(), checkScope(['update:role']), validateDat
 	roleController.update(req.params.id, name, permissions, description)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Alternar status
-roleRouter.patch('/toggle-status/:id', isAuth(), checkScope(['read:update']), (req, res) => {
+roleRouter.patch('/toggle-status/:id', isAuth(), checkScope(['read:update']), (req, res, next) => {
 	roleController.toggleStatus(req.params.id)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 export { roleRouter };

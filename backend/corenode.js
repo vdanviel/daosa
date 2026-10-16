@@ -19,7 +19,7 @@ moduleCommand.command('generate <name>')
 
     const generator = new ModuleGenerator();
     
-    await generator.generate(name, opt.mode || 'empty');
+    await generator.generate(name, opt || 'empty');
 
   });
 

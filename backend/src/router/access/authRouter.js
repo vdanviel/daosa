@@ -19,11 +19,11 @@ const validateDataUpdated = [
 ];
 
 // Buscar por ID
-authRouter.get('/:id', isAuth(), checkScope(['read:auth']), (req, res) => {
+authRouter.get('/:id', isAuth(), checkScope(['read:auth']), (req, res, next) => {
 	authController.find(req.params.id)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Buscar todos paginado
@@ -31,15 +31,15 @@ authRouter.get('/', [
 	query('page').optional().exists().withMessage('O page precisa estar presente.'),
 	query('size').optional().exists().withMessage('O size precisa estar presente.'),
 	query('search').optional().exists().withMessage('O search precisa estar presente.')
-], isAuth(), checkScope(['read:auth']), (req, res) => {
+], isAuth(), checkScope(['read:auth']), (req, res, next) => {
 	authController.all(req.query.page, req.query.size, req.query.search)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Criar novo registro
-authRouter.post('/register', validateData, isAuth(), checkScope(['write:auth']), (req, res) => {
+authRouter.post('/register', validateData, isAuth(), checkScope(['write:auth']), (req, res, next) => {
 
 	// Validação dos dados recebidos
 	const errors = validationResult(req);
@@ -51,11 +51,11 @@ authRouter.post('/register', validateData, isAuth(), checkScope(['write:auth']),
 	authController.create(sub, ip, agent)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Atualizar registro
-authRouter.put('/update/:id', validateDataUpdated, isAuth(), checkScope(['update:auth']),(req, res) => {
+authRouter.put('/update/:id', validateDataUpdated, isAuth(), checkScope(['update:auth']), (req, res, next) => {
 
 	// Validação dos dados recebidos
 	const errors = validationResult(req);
@@ -67,15 +67,15 @@ authRouter.put('/update/:id', validateDataUpdated, isAuth(), checkScope(['update
 	authController.update(req.params.id, sub, ip, agent)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 // Deletar registro
-authRouter.delete('/delete/:id', isAuth(), checkScope(['delete:auth']), (req, res) => {
+authRouter.delete('/delete/:id', isAuth(), checkScope(['delete:auth']), (req, res, next) => {
 	authController.delete(req.params.id)
 		.then(result => {
 			res.send(result);
-		});
+		}).catch(next);
 });
 
 export { authRouter };

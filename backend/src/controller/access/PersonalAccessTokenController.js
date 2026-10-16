@@ -55,12 +55,12 @@ class Controller {
         return personalAT;
     }
 
-    async deleteAllRelated(customerId) {
+    async deleteAllRelated(userId) {
         const deletedCount = await PersonalAccessToken.destroy({
             where: {
-                tokenable_id: customerId,
+                tokenable_id: userId,
                 tokenable_type: {
-                    [Op.in]: ["forgot_password", "customer_forgot_password", "customer_change_email"]
+                    [Op.in]: ["forgot_password", "user_forgot_password", "user_change_email"]
                 }
             }
         });

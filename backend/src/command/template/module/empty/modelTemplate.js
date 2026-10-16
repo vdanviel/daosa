@@ -11,4 +11,6 @@ const __TitleModuleName__ = sequelize.define('__TitleModuleName__', {
   timestamps: false
 });
 
+sequelize.sync();
+
 export { __TitleModuleName__ };

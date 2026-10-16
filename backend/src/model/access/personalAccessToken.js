@@ -4,7 +4,7 @@ import { sequelize } from '../../connection/database.js';
 const PersonalAccessToken = sequelize.define('PersonalAccessToken', {
   id: { type: DataTypes.INTEGER.UNSIGNED, primaryKey: true, autoIncrement: true },
   tokenable_type: { type: DataTypes.STRING, allowNull: true },
-  tokenable_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: true },
+  tokenable_id: { type: DataTypes.STRING(36), allowNull: true },
   name: { type: DataTypes.STRING, allowNull: true },
   secret: { type: DataTypes.STRING, allowNull: true },
   token: { type: DataTypes.STRING, allowNull: true },
@@ -17,5 +17,7 @@ const PersonalAccessToken = sequelize.define('PersonalAccessToken', {
   tableName: 'personal_access_token',
   timestamps: false
 });
+
+sequelize.sync();
 
 export { PersonalAccessToken };

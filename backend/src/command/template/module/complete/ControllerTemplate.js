@@ -1,75 +1,105 @@
 import { Op } from 'sequelize';
-import { __TitleModuleName__ } from '../model/__TitleModuleName__.js';
+import { __TitleModuleName__ } from '../model/__ModuleName__.js';
 
 class Controller {
-  async find(id) {
-    const record = await __TitleModuleName__.findByPk(id);
-    if (!record) {
-      const error = new Error('Not found.');
-      error.status = 404;
-      throw error;
-    }
-    return record;
-  }
 
-  async all(page = 1, size = 10, search = '') {
-    const safePage = Math.max(1, parseInt(page, 10) || 1);
-    const safeSize = Math.max(1, parseInt(size, 10) || 10);
-    const where = search ? {
-      [Op.or]: ['value_1', 'value_2', 'value_3'].map(field => ({
-        [field]: { [Op.like]: `%${search}%` }
-      }))
-    } : {};
-    const { rows, count } = await __TitleModuleName__.findAndCountAll({
-      where,
-      offset: (safePage - 1) * safeSize,
-      limit: safeSize
+	async create(value1, value2, value3) {
+
+    const existing__TittleModuleName__ = await __TittleModuleName__.findAll({ 
+			where: {
+        value1: value1
+			} 
+		});
+
+    if (existing__TittleModuleName__) {
+        const err = new Error('__TittleModuleName__ is already being used.');
+        err.status = 409;
+        throw err;
+    }
+
+		return __TitleModuleName__.create({
+      value1,
+      value2,
+      value3
     });
+	}
 
-    return {
-      data: rows,
-      total: count,
-      quantity: rows.length,
-      totalPages: Math.ceil(count / safeSize)
-    };
-  }
+	async findAll(page = 1, size = 10, search = '') {
+		page = Math.max(1, parseInt(page, 10) || 1);
+		size = Math.max(1, parseInt(size, 10) || 10);
+		search = typeof search === 'string' ? search.trim() : '';
 
-  async create(value1, value2, value3) {
-    return __TitleModuleName__.create({
-      value_1: value1,
-      value_2: value2,
-      value_3: value3
-    });
-  }
+		const searchableFields = Object.entries(__TitleModuleName__.rawAttributes)
+			.filter(([, attribute]) => attribute.type?.key === 'STRING')
+			.map(([field]) => field);
+		const where = search && searchableFields.length > 0 ? {
+			[Op.or]: searchableFields.map(field => ({
+				[field]: { [Op.like]: `%${search}%` }
+			}))
+		} : {};
 
-  async update(id, value1, value2, value3) {
-    const record = await this.find(id);
-    const fields = Object.fromEntries(
-      Object.entries({ value_1: value1, value_2: value2, value_3: value3 })
-        .filter(([, value]) => value !== undefined)
-    );
-    if (Object.keys(fields).length > 0) {
-      await record.update({ ...fields, updated_at: new Date() });
-    }
-    return record;
-  }
+		const { rows, count: total } = await __TitleModuleName__.findAndCountAll({
+			where,
+			offset: (page - 1) * size,
+			limit: size,
+			order: [['created_at', 'DESC']]
+		});
 
-  async delete(id) {
-    const deletedCount = await __TitleModuleName__.destroy({ where: { id } });
-    if (deletedCount === 0) {
-      const error = new Error('Not found.');
-      error.status = 404;
-      throw error;
-    }
-    return { message: 'Deleted successfully.' };
-  }
+		return {
+			data: rows,
+			total,
+			quantity: rows.length,
+			totalPages: Math.ceil(total / size)
+		};
+	}
 
-  async toggleStatus(id) {
-    const record = await this.find(id);
-    const status = !record.status;
-    await record.update({ status, updated_at: new Date() });
-    return { message: `Status ${status ? 'enabled' : 'disabled'} successfully.` };
-  }
+	async find(id) {
+		const record = await __TitleModuleName__.findByPk(id);
+		if (!record) {
+			const error = new Error('__TitleModuleName__ not found.');
+			error.status = 404;
+			throw error;
+		}
+		return record;
+	}
+
+	async update(id, value1, value2, value3) {
+		const record = await __TitleModuleName__.findOne(id);
+
+		record.value1 = value1;
+		record.value2 = value2;
+		record.value3 = value3;
+		record.updated_at = new Date();
+
+		await record.save();
+
+		return record;
+	}
+
+	async toggleStatus(id, status) {
+		const record = await __TitleModuleName__.findOne(id);
+
+		if (!['draft', 'active', 'archived'].includes(status)) {
+			const error = new Error("Status must be 'draft', 'active' or 'archived'.");
+			error.status = 400;
+			throw error;
+		}
+
+		record.status = status;
+
+    record.save();
+
+		return record;
+	}
+
+	async delete(id) {
+		const record = await __TitleModuleName__.findOne(id);
+
+		await record.destroy();
+
+		return record;
+    
+	}
 }
 
 const __TitleModuleName__Controller = new Controller();

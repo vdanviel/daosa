@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv'
-dotenv.config();
+import Env from '../util/Env.js';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = Env.getJwtSecret();
 
 const isAuth = (req, res, next) => {
     if (!req || !req.headers) {
@@ -21,10 +20,14 @@ const isAuth = (req, res, next) => {
         if (err) {
             console.log(err);
             return res.status(403).json({ jwt_invalid: 'Invalid or expired token.' });
+        }else{
+            req.auth = decoded;
+
+            console.log(req.auth)
+
+            next();
         }
-        
-        req.auth = decoded;
-        next();
+    
     });
 };
 

@@ -7,7 +7,8 @@ const personalAccessTokenRouter = express.Router();
 //verifica se token exists
 personalAccessTokenRouter.get('/code/verify/:code',[
     param('code').exists().withMessage("O código é obrigatório.").notEmpty().withMessage("O código não pode estar vazio.")
-], (req, res) => {
+], (req, res, next) => {
+    
 
     const validate = validationResult(req);
 
@@ -21,14 +22,15 @@ personalAccessTokenRouter.get('/code/verify/:code',[
 
         return res.send(token);
 
-    });
+    }).catch(next);
 
 });
 
 //verifica se token existe pelo secret dele
 personalAccessTokenRouter.get('/secret/verify/:secret',[
     param('secret').exists().withMessage("O código é obrigatório.").notEmpty().withMessage("O código não pode estar vazio.")
-], (req, res) => {
+], (req, res, next) => {
+    
 
     const validate = validationResult(req);
 
@@ -42,7 +44,7 @@ personalAccessTokenRouter.get('/secret/verify/:secret',[
 
         return res.send(token);
 
-    });
+    }).catch(next);
 
 });
 

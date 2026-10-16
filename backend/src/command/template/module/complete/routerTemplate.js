@@ -3,67 +3,91 @@ import express from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { __TitleModuleName__Controller } from '../controller/__TitleModuleName__Controller.js';
 
-const __TitleModuleName__Router = express.Router();
+const __ModuleName__Controller = express.Router();
 
-__TitleModuleName__Router.get('/:id', async (req, res) => {
-	res.send(await __TitleModuleName__Controller.find(req.params.id));
+__ModuleName__Controller.get('/:id', async (req, res, next) => {
+	try {
+		res.send(await __TitleModuleName__Controller.find(req.params.id));
+	} catch (err) { next(err); }
 });
 
-__TitleModuleName__Router.get('/', [
+__ModuleName__Controller.get('/', [
 	query('page').optional().isInt({ min: 1 }),
 	query('size').optional().isInt({ min: 1 }),
 	query('search').optional().isString()
-], async (req, res) => {
+], async (req, res, next) => {
+
 	const errors = validationResult(req);
+
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-	res.send(await __TitleModuleName__Controller.all(
-		req.query.page,
-		req.query.size,
-		req.query.search
-	));
+
+	try {
+		res.send(await __TitleModuleName__Controller.all(
+			req.query.page,
+			req.query.size,
+			req.query.search
+		));
+	} catch (err) { next(err); }
+
 });
 
-__TitleModuleName__Router.post('/register', [
+__ModuleName__Controller.post('/register', [
 	body('value1').optional(),
 	body('value2').optional(),
 	body('value3').optional()
-], async (req, res) => {
+], async (req, res, next) => {
+
 	const errors = validationResult(req);
+
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-	res.status(201).send(await __TitleModuleName__Controller.create(
-		req.body.value1,
-		req.body.value2,
-		req.body.value3
-	));
+
+	try {
+		res.status(201).send(await __TitleModuleName__Controller.create(
+			req.body.value1,
+			req.body.value2,
+			req.body.value3
+		));
+	} catch (err) { next(err); }
+
 });
 
-__TitleModuleName__Router.put('/update/:id', [
+__ModuleName__Controller.put('/update/:id', [
 	body('value1').optional(),
 	body('value2').optional(),
 	body('value3').optional()
-], async (req, res) => {
+], async (req, res, next) => {
+
 	const errors = validationResult(req);
+
 	if (!errors.isEmpty()) {
 		return res.status(400).json({ errors: errors.array() });
 	}
-	res.send(await __TitleModuleName__Controller.update(
-		req.params.id,
-		req.body.value1,
-		req.body.value2,
-		req.body.value3
-	));
+
+	try {
+		res.send(await __TitleModuleName__Controller.update(
+			req.params.id,
+			req.body.value1,
+			req.body.value2,
+			req.body.value3
+		));
+	} catch (err) { next(err); }
+
 });
 
-__TitleModuleName__Router.delete('/delete/:id', async (req, res) => {
-	res.send(await __TitleModuleName__Controller.delete(req.params.id));
+__ModuleName__Controller.delete('/delete/:id', async (req, res, next) => {
+	try {
+		res.send(await __TitleModuleName__Controller.delete(req.params.id));
+	} catch (err) { next(err); }
 });
 
-__TitleModuleName__Router.patch('/:id/status', async (req, res) => {
-	res.send(await __TitleModuleName__Controller.toggleStatus(req.params.id));
+__ModuleName__Controller.patch('/:id/status', async (req, res, next) => {
+	try {
+		res.send(await __TitleModuleName__Controller.toggleStatus(req.params.id));
+	} catch (err) { next(err); }
 });
 
-export { __TitleModuleName__Router };
+export { __ModuleName__Controller };

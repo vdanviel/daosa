@@ -2,14 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { manager as mailManager } from './MailManager.js';
-import dotenv from 'dotenv';
-dotenv.config();
+import Env from '../util/Env.js';
 
 class MailSender {
     
     constructor() {
         this.templatePath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'template');
-        this.appName = process.env.APP_NAME || "Company";
+        this.appName = Env.getAppName();
     }
 
     /**
@@ -72,7 +71,7 @@ class MailSender {
 
             const plainHTML = content.toString()
                 .replaceAll("{name}", name)
-                .replaceAll("{host}", process.env.SPA_APPLICATION_URL)
+                .replaceAll("{host}", Env.getSpaApplicationUrl())
                 .replaceAll("{email}", newEmail)
                 .replaceAll("{code}", code)
                 .replaceAll("{secret}", secretWord)

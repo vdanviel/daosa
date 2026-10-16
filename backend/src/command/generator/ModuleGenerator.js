@@ -20,7 +20,8 @@ class ModuleGenerator {
     }
 
     _validateModuleName(titleModuleName) {
-        if (fs.existsSync(path.join(this._modelPath, `${titleModuleName}.js`))) {
+        const moduleName = CommandUtil.camelize(titleModuleName, false);
+        if (fs.existsSync(path.join(this._modelPath, `${moduleName}.js`))) {
             throw new Error("Module already exists.");
         }
         
@@ -39,7 +40,7 @@ class ModuleGenerator {
             const moduleName = CommandUtil.camelize(name, false);
             const titleModuleName = CommandUtil.camelize(name, true);
             this._validateModuleName(titleModuleName);
-
+            
             let templatePath;
             if (emptyOrFull === 'empty') {
                 templatePath = this._templateFileEmptyPath;
@@ -65,7 +66,7 @@ class ModuleGenerator {
 
             await this._generateFile(
                 modelTemplate,
-                path.join(this._modelPath, `${titleModuleName}.js`),
+                path.join(this._modelPath, `${moduleName}.js`),
                 replacements
             );
             await this._generateFile(
@@ -75,7 +76,7 @@ class ModuleGenerator {
             );
             await this._generateFile(
                 path.join(templatePath, "routerTemplate.js"),
-                path.join(this._routePath, `${titleModuleName}Router.js`),
+                path.join(this._routePath, `${moduleName}Router.js`),
                 replacements
             );
 
@@ -94,10 +95,11 @@ class ModuleGenerator {
     async remove(name) {
         try {
             const titleModuleName = CommandUtil.camelize(name, true);
+            const moduleName = CommandUtil.camelize(name, false);
             const files = [
-                path.join(this._modelPath, `${titleModuleName}.js`),
+                path.join(this._modelPath, `${moduleName}.js`),
                 path.join(this._controllerPath, `${titleModuleName}Controller.js`),
-                path.join(this._routePath, `${titleModuleName}Router.js`)
+                path.join(this._routePath, `${moduleName}Router.js`)
             ];
             for (const file of files) {
                 if (fs.existsSync(file)) {

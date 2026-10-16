@@ -14,12 +14,14 @@ const Role = sequelize.define('Role', {
   timestamps: false
 });
 
+sequelize.sync();
+
 async function initializeDefaultRole() {
   await Role.findOrCreate({
-    where: { name: 'customer-role' },
+    where: { name: 'user-role' },
     defaults: {
-      permissions: ['read:customer', 'write:customer', 'update:customer', 'delete:customer'],
-      description: 'Permissões (scope) do cliente padrão. Usado para gerar JWT no sistema web service.',
+      permissions: ['read:user', 'write:user', 'update:user', 'delete:user'],
+      description: 'Permissões (scope) padrão de usuário para gerar JWT.',
       status: true
     }
   });

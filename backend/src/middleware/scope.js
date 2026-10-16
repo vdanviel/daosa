@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv'
-dotenv.config();
+import Env from '../util/Env.js';
 
 const checkScope = (requiredScope) => {
     
@@ -8,7 +7,7 @@ const checkScope = (requiredScope) => {
         const token = req.headers.authorization?.split(' ')[1];
         
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, Env.getJwtSecret());
             if (!decoded.scope || !decoded.scope.includes(requiredScope)) {
                 return res.status(403).json({ scope_error: 'Not allowed. Insufficient permission.' });
             }

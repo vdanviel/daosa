@@ -1,0 +1,3 @@
+docker_volumes/mysql/*
+docker_volumes/qdrant/*
+docker_volumes/ollama/*
