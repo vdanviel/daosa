@@ -3,12 +3,15 @@ import cors from 'cors';
 import express from 'express';
 import session from 'express-session';
 import swaggerUi from 'swagger-ui-express';
+import { fileURLToPath } from 'node:url';
 import { connectDatabase } from './src/connection/database.js';
 import { errorHandler } from './src/middleware/errorHandler.js';
 import { initializeDefaultRole } from './src/model/access/role.js';
 import { initializeDefaultChannel } from './src/model/channel.js';
 import { version1Router } from './src/router/version/version1Router.js';
 import Env from './src/util/Env.js';
+import { initWorkers } from './src/jobs/worker.js';
+import { ensureQdrantCollections } from './src/connection/qdrant.js';
 
 Env.validate();
 
@@ -17,6 +20,9 @@ const port = Env.getPort();
 
 // Configura o parser antes das rotas para disponibilizar req.body.
 app.use(express.json());
+
+// Disponibiliza arquivos estáticos, como o ícone padrão do chat.
+app.use('/public', express.static(fileURLToPath(new URL('./src/public/', import.meta.url))));
 
 // Disponibiliza a documentação gerada em /api-docs.
 const swaggerFile = new URL('./swagger-output.json', import.meta.url);
@@ -60,6 +66,8 @@ async function start() {
     await connectDatabase();
     await initializeDefaultRole();
     await initializeDefaultChannel();
+    await ensureQdrantCollections();
+    initWorkers();
     app.listen(port, () => {
       console.log(`API is running on ${port} port!`);
     });

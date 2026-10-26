@@ -5,6 +5,9 @@ import { userRouter } from "../userRouter.js";
 import { agentRouter } from "../agentRouter.js";
 import { ConversationRouter } from "../conversationRouter.js";
 import { MessageRouter } from "../messageRouter.js";
+import { GoogleRouter } from "../googleRouter.js";
+import { ChannelRouter } from "../channelRouter.js";
+import { IntegrationRouter } from "../integrationRouter.js";
 
 import { personalAccessTokenRouter } from "../access/personalAccessTokenRouter.js";
 
@@ -15,5 +18,9 @@ version1Router.use(`/token`, personalAccessTokenRouter);
 version1Router.use('/agent', agentRouter);
 version1Router.use('/conversation', ConversationRouter);
 version1Router.use('/message', MessageRouter);
+version1Router.use('/google', GoogleRouter);
+version1Router.use('/channel', ChannelRouter);
+version1Router.use('/integration', IntegrationRouter);
+
 
 export {version1Router};

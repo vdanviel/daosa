@@ -1,12 +1,23 @@
 import Env from "../../../util/Env.js";
-import { ChatOllama } from "@langchain/ollama";
-
+import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama";
+import { randomUUID } from 'node:crypto';
+import { qdrant, qdrantConfig } from '../../../connection/qdrant.js';
 export default class OllamaProvider {
+
+  constructor(){
+
+    this.ollamaEmbedding = new OllamaEmbeddings({
+        model: Env.getEmbeddingLlmModel(),
+        dimensions: 1024,
+        baseUrl: Env.getEmbeddingLlmUrl()
+    });
+
+  }
 
   async chat(messages, options = {}) {
     const startTime = Date.now();
 
-    const model = new ChatOllama({
+    this.ollamaLlm = new ChatOllama({
       baseUrl: Env.getLlmUrl(),
       model: Env.getLlmModel(),
       temperature: options?.temperature,
@@ -14,25 +25,23 @@ export default class OllamaProvider {
       numPredict: options?.num_predict
     });
 
-    console.log(model)
-
     const formattedMessages = messages.map(({ role, content }) => [
       role === 'user' ? 'human' : role === 'assistant' ? 'ai' : role,
       content
     ]);
 
     console.log("[OllamaProvider] Requisição enviada:", {
-      model: model.model,
+      model: ollamaLlm.model,
       options: {
-        temperature: model.temperature,
-        topP: model.topP,
-        numPredict: model.numPredict
+        temperature: ollamaLlm.temperature,
+        topP: ollamaLlm.topP,
+        numPredict: ollamaLlm.numPredict
       },
       directive: formattedMessages.find(([role]) => role === 'system')?.[1] ?? null,
       prompt: formattedMessages
     });
 
-    const response = await model.invoke(formattedMessages);
+    const response = await ollamaLlm.invoke(formattedMessages);
     const latency_ms = Date.now() - startTime;
 
     // Extrai tokens utilizados (LangChain usage_metadata ou response_metadata do Ollama)
@@ -56,5 +65,23 @@ export default class OllamaProvider {
       raw: response || null
     };
   }
+
+  //embed varios textos
+  async embedChunks(textChunks = []) {
+
+    if (textChunks.length <= 0) return []
+
+    return this.ollamaEmbedding.embedDocuments(textChunks);
+
+  }
+
+  //embed um texto
+  async embedText(text) {
+
+    return this.ollamaEmbedding.embedQuery(text);
+
+  }
+
+
 
 }

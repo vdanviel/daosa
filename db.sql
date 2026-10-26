@@ -36,7 +36,7 @@ CREATE TABLE agent (
     user_id     BIGINT UNSIGNED NULL,
     name        VARCHAR(255) NULL,
     description TEXT         NULL,
-    objective   TEXT         NULL,                 
+    objective   VARCHAR(30)         NULL,                 
     status      ENUM('draft', 'active', 'archived') NULL DEFAULT 'draft',
     model_config JSON        NULL,                 
     created_at  DATETIME     NULL DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +76,6 @@ CREATE TABLE knowledge_source (
     file_mime     VARCHAR(100) NULL,
     file_size     BIGINT       NULL,
     url           VARCHAR(2000) NULL,
-    raw_content   MEDIUMTEXT   NULL,
     status        ENUM('pending','processing','processed','failed') NULL DEFAULT 'pending',
     error_message TEXT         NULL,
     processed_at  DATETIME     NULL,
@@ -96,7 +95,6 @@ CREATE TABLE knowledge_chunk (
     agent_id            BIGINT UNSIGNED NULL,
     user_id             BIGINT UNSIGNED NULL,
     chunk_index         INT         NULL,          
-    content             TEXT        NULL,
     token_count         INT         NULL,
     qdrant_point_id     CHAR(36)    NULL,             
     created_at          DATETIME    NULL DEFAULT CURRENT_TIMESTAMP,
@@ -110,22 +108,22 @@ CREATE TABLE knowledge_chunk (
 ) ENGINE=InnoDB;
 
 CREATE TABLE integration (
-    id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    agent_id    BIGINT UNSIGNED NULL,
-    user_id     BIGINT UNSIGNED NULL,
-    name        VARCHAR(255) NULL,
-    type        ENUM('mcp','api') NULL,
-    endpoint    VARCHAR(2000) NULL,
-    auth_type   ENUM('none','api_key','oauth2','basic') NULL DEFAULT 'none',
-    credentials_encrypted TEXT NULL,
-    config      JSON NULL,                         
-    status      ENUM('active','disabled','error') NULL DEFAULT 'active',
-    created_at  DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id              BIGINT UNSIGNED NOT NULL,
+    provider             VARCHAR(50)   NOT NULL,   -- 'google_drive' | 'whatsapp' | 'telegram' | 'discord' | 'openai' | ...
+    label                VARCHAR(150)  NULL,       -- exibição: "Conta Google — victor@empresa.com"
+    auth_type            ENUM('none','api_key','oauth2','basic') NOT NULL DEFAULT 'api_key',
+    credentials_encrypted TEXT          NULL,       -- JSON SECRETO inteiro, AES-256-GCM
+    config               JSON          NULL,       -- metadados NÃO-secretos, formato livre por provedor
+    secret_expires_at    DATETIME      NULL,       -- validade do access_token
+    status               ENUM('active','revoked','error') NOT NULL DEFAULT 'active',
+    last_used_at         DATETIME      NULL,
+    created_at           DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    KEY idx_integration_agent (agent_id),
-    CONSTRAINT fk_integration_agent FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
-    CONSTRAINT fk_integration_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+    KEY idx_connection_user_provider (user_id, provider),
+    KEY idx_connection_status (status),
+    CONSTRAINT fk_connection_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE tool (
@@ -146,24 +144,11 @@ CREATE TABLE tool (
     CONSTRAINT fk_tool_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE permission (
-    id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    agent_id    BIGINT UNSIGNED NULL,
-    user_id     BIGINT UNSIGNED NULL,
-    subject_type ENUM('tool','integration','channel','knowledge') NULL,
-    subject_id  BIGINT UNSIGNED NULL,
-    effect      ENUM('allow','deny') NULL DEFAULT 'allow',
-    created_at  DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    KEY idx_permission_agent (agent_id),
-    CONSTRAINT fk_permission_agent FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
-    CONSTRAINT fk_permission_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
 CREATE TABLE channel (
     id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     type          ENUM('own','whatsapp','telegram','discord','api') NULL,
     name          VARCHAR(255) NULL,
+    icon_url      VARCHAR(2000) NULL,
     config        JSON NULL,                       
     status        ENUM('active','inactive') NULL DEFAULT 'active',
     created_at    DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
@@ -175,10 +160,33 @@ CREATE TABLE channel (
     CONSTRAINT fk_channel_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE client (
+    id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    agent_id            BIGINT UNSIGNED NOT NULL,
+    user_id             BIGINT UNSIGNED NOT NULL,
+    label               VARCHAR(30) NULL,
+    identifier            VARCHAR(255) NULL,
+    avatar_url          VARCHAR(2000) NULL,
+    profile_url         VARCHAR(2000) NULL,
+    metadata             JSON(35) NULL,
+    do_not_contact      TINYINT(1) NOT NULL DEFAULT 0,
+    created_at          DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at          DATETIME NULL,
+    PRIMARY KEY (id),
+    KEY idx_client_agent (agent_id),
+    KEY idx_client_user (user_id),
+    KEY idx_client_agent_email (agent_id, email),
+    KEY idx_client_agent_phone (agent_id, phone),
+    CONSTRAINT fk_client_agent FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
+    CONSTRAINT fk_client_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE conversation (
     id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     agent_id      BIGINT UNSIGNED NULL,
     user_id       BIGINT UNSIGNED NULL,
+    client_id     BIGINT UNSIGNED NULL,
     channel_id    BIGINT UNSIGNED NULL,                   
     external_user_id VARCHAR(255) NULL,            
     external_user_name VARCHAR(255) NULL,
@@ -191,8 +199,10 @@ CREATE TABLE conversation (
     PRIMARY KEY (id),
     KEY idx_conversation_agent (agent_id, last_message_at),
     KEY idx_conversation_user (user_id),
+    KEY idx_conversation_client (client_id),
     CONSTRAINT fk_conversation_agent FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
     CONSTRAINT fk_conversation_channel FOREIGN KEY (channel_id) REFERENCES channel (id) ON DELETE SET NULL,
+    CONSTRAINT fk_conversation_client FOREIGN KEY (client_id) REFERENCES client (id) ON DELETE SET NULL,
     CONSTRAINT fk_conversation_user FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

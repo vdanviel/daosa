@@ -14,6 +14,4 @@ const Auth = sequelize.define('Auth', {
   timestamps: false
 });
 
-sequelize.sync();
-
 export { Auth };

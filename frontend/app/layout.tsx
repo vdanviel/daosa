@@ -9,13 +9,13 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 export const metadata: Metadata = {
   title: 'Daosa',
   description:
-    'Configure your AI agent: connect conversation channels, link data sources, and chat with Daosa in one elegant onboarding panel.',
+    'Configure seu agente de IA: conecte canais de conversação, vincule fontes de dados e converse com a Daosa em um elegante painel de integração.',
   icons: { icon: '/images/daosa-icon.png' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans`}>
         <AuthProvider>
           {children}

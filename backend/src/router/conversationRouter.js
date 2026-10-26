@@ -40,7 +40,7 @@ ConversationRouter.get('/all',
 		const validation = validationResult(req);
 		if (!validation.isEmpty()) return res.status(400).send({ missing: validation.array() });
 
-		const result = await ConversationController.findAll(req.query.page, req.query.size, req.query.search);
+		const result = await ConversationController.findAll(req.query.page, req.query.size, req.query.search, req.auth.data.sub);
 		res.status(200).json(result);
 	}
 );

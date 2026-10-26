@@ -18,6 +18,4 @@ const PersonalAccessToken = sequelize.define('PersonalAccessToken', {
   timestamps: false
 });
 
-sequelize.sync();
-
 export { PersonalAccessToken };

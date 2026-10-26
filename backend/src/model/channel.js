@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../connection/database.js';
-import { channelConfigHelper, CHANNEL_TYPES } from '../helper/ChannelConfigHelper.js';
 
 const Channel = sequelize.define('Channel', {
   id: {
@@ -14,13 +13,17 @@ const Channel = sequelize.define('Channel', {
     allowNull: false
   },
   type: {
-    type: DataTypes.ENUM('own', 'whatsapp', 'telegram', 'discord', 'api'),
+    type: DataTypes.ENUM('own', 'whatsapp', 'telegram', 'discord'),
     allowNull: false,
     defaultValue: 'own'
   },
+  icon_url: {
+    type: DataTypes.STRING(2000),
+    allowNull: true
+  },
   /*
     Exemplo de estrutura para config:
-    - own: { title, subtitle, primary_color, position, welcome_message, placeholder, avatar_url, collect_user_info, allowed_domains }
+    - own: { title, subtitle, welcome_message, placeholder, allowed_domains }
     - whatsapp: { provider, phone_number, instance_name, api_url, api_key, webhook_secret, auto_reply, delay_ms }
     - telegram: { bot_token, bot_username, webhook_url, parse_mode, allowed_updates }
     - discord: { bot_token, client_id, guild_id, channel_ids, command_prefix }
@@ -29,11 +32,6 @@ const Channel = sequelize.define('Channel', {
   config: {
     type: DataTypes.JSON,
     allowNull: true
-  },
-  status: {
-    type: DataTypes.ENUM('active', 'inactive'),
-    allowNull: false,
-    defaultValue: 'active'
   },
   created_at: {
     type: DataTypes.DATE,
@@ -57,46 +55,24 @@ const Channel = sequelize.define('Channel', {
  * assim que a tabela for sincronizada.
  */
 async function initializeDefaultChannel() {
-  try {
-    const defaultConfig = channelConfigHelper.getDefaultConfig(CHANNEL_TYPES.OWN);
+  const existingOwnChannel = await Channel.findOne({ where: { type: 'own' } });
+  
+  if (existingOwnChannel) return;
 
-    const channelById = await Channel.findByPk(1);
-
-    if (!channelById) {
-      await Channel.create({
-        id: 1,
-        name: 'Plataforma Daosa (Web Chat)',
-        type: CHANNEL_TYPES.OWN,
-        config: defaultConfig,
-        status: 'active'
-      });
-      console.log('Canal padrão da plataforma (own) criado com sucesso (ID: 1).');
-      return;
+  await Channel.create({
+    name: 'Plataforma',
+    type: 'own',
+    icon_url: '/public/images/icon-own-chat.png',
+    config: {
+      title: 'Atendimento Virtual',
+      subtitle: 'Assistente Inteligente',
+      welcome_message: 'Olá! Como posso ajudar você hoje?',
+      placeholder: 'Digite sua mensagem...',
+      collect_user_info: false,
+      allowed_domains: ['*']
     }
-
-    if (channelById.type !== CHANNEL_TYPES.OWN) {
-      const existingOwn = await Channel.findOne({
-        where: { type: CHANNEL_TYPES.OWN, user_id: null }
-      });
-
-      if (!existingOwn) {
-        await Channel.create({
-          name: 'Plataforma Daosa (Web Chat)',
-          type: CHANNEL_TYPES.OWN,
-          config: defaultConfig,
-          status: 'active'
-        });
-        console.log('Canal padrão da plataforma (own) criado com sucesso.');
-      }
-    }
-  } catch (error) {
-    console.error('Aviso ao inicializar canal padrão (own):', error.message);
-  }
+  });
+  console.log('Canal padrão da plataforma (own) criado com sucesso.');
 }
-
-// Cria automaticamente o registro do canal 'own' logo após o sync
-sequelize.sync().then(() => {
-  initializeDefaultChannel().catch(() => {});
-}).catch(() => {});
 
 export { Channel, initializeDefaultChannel };

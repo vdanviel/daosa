@@ -40,6 +40,8 @@ class MailManager {
         });
 
         console.log("Envelope used:", info.envelope);
+
+        return info;
     }
 
 }

@@ -12,77 +12,77 @@ import { useAuth } from '@/lib/auth-context';
 const features = [
   {
     icon: MessageCircle,
-    title: 'Multi-channel streams',
-    desc: 'Connect with any message channel, or use the native Daosa chat.',
+    title: 'Atendimento multicanal',
+    desc: 'Disponibilize seu agente no painel web, no WhatsApp e no Telegram — a resposta volta sempre pelo canal de origem.',
   },
   {
     icon: FolderOpen,
-    title: 'Pluggable data sources',
-    desc: 'Google Drive (OAuth), S3-compatible buckets, or MCP. Your data can come from anywhere.',
+    title: 'Base de conhecimento com RAG',
+    desc: 'Envie documentos, URLs e arquivos: eles são divididos em trechos e indexados para busca vetorial contextual no Qdrant.',
   },
   {
     icon: Shield,
-    title: 'Least-privilege by design',
-    desc: 'Your company can register as many employees as you wish.',
+    title: 'Segurança e isolamento por conta',
+    desc: 'Cada usuário acessa somente seus próprios agentes e dados, com autenticação e permissões validadas em cada operação.',
   },
   {
     icon: Sparkles,
-    title: 'Simplicity',
-    desc: 'Register your account and get your bot up and running in minutes.',
+    title: 'Simplicidade',
+    desc: 'Cadastre sua conta e configure nome, objetivo e instruções do agente pelo painel — no ar em minutos.',
   },
 ];
 
 const providers = [
-  { icon: MessageCircle, name: 'Discord' },
-  { icon: Bot, name: 'Daosa Native' },
-  { icon: FolderOpen, name: 'Google Drive' },
-  { icon: Cloud, name: 'Cloud' },
+  { icon: Bot, name: 'Painel web' },
+  { icon: Phone, name: 'WhatsApp' },
+  { icon: MessageCircle, name: 'Telegram' },
   { icon: Workflow, name: 'MCP' },
+  { icon: Cloud, name: 'APIs externas' },
 ];
 
 const steps = [
-  { n: '01', t: 'Register your org', d: 'Create an org and the first master tenant in one flow.' },
-  { n: '02', t: 'Configure a stream', d: 'Pick a channel provider, fill the dynamic form, save.' },
-  { n: '03', t: 'Connect a data source', d: 'Link Google Drive with OAuth or connect an MCP server.' },
-  { n: '04', t: 'Chat with Daosa', d: 'Chat with a specialist about your business 24/7.' },
+  { n: '01', t: 'Crie sua conta', d: 'Cadastre-se e acesse o painel do DAOSA.' },
+  { n: '02', t: 'Monte seu agente', d: 'Defina nome, objetivo, instruções e permissões do seu agente de IA.' },
+  { n: '03', t: 'Ensine com sua base', d: 'Associe documentos, URLs e servidores MCP: tudo é indexado para consultas contextuais por RAG.' },
+  { n: '04', t: 'Conecte os canais', d: 'Disponibilize no painel, WhatsApp e Telegram e converse 24/7 com registro de cada interação.' },
 ];
 
 const previewCards = [
   {
-    step: 'Step 1',
-    title: 'Pick a stream',
+    step: 'Etapa 1',
+    title: 'Conecte um canal',
     items: [
-      { icon: MessageCircle, label: 'Discord' },
+      { icon: Bot, label: 'Painel web' },
       { icon: Phone, label: 'WhatsApp' },
-      { icon: Bot, label: 'Daosa native' },
-      { icon: Sparkles, label: "Others..." }
+      { icon: MessageCircle, label: 'Telegram' },
+      { icon: Sparkles, label: "Outros..." }
     ],
   },
   {
-    step: 'Step 2',
-    title: 'Link a drive',
+    step: 'Etapa 2',
+    title: 'Alimente a base',
     items: [
-      { icon: FolderOpen, label: 'Google Drive' },
+      { icon: FolderOpen, label: 'Documentos' },
+      { icon: Cloud, label: 'URLs e páginas' },
       { icon: Workflow, label: 'MCP' },
-      { icon: Cloud, label: 'Cloud' },
-      { icon: Sparkles, label: "Others..." }
+      { icon: Sparkles, label: "Outros..." }
     ],
   },
   {
-    step: 'Step 3',
-    title: 'Chat with Daosa',
+    step: 'Etapa 3',
+    title: 'Converse com a Daosa',
     chat: [
       {
         bot: false,
-        content: "What can you do, Daosa ?"
+        content: "Qual é a política de férias da empresa?"
       },
       {
         bot: true,
-        content: "I can retrieve information from the company's knowledge base and answer your questions in a simple way."
+        content: "Segundo a política da empresa: pedido com no mínimo 30 dias de antecedência, aprovado pelo gestor direto."
       },
       {
         bot: false,
-        content: "Awesome!"
+        content: "Show!"
       }
     ]
   },
@@ -95,7 +95,7 @@ export default function Home() {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (mounted && !loading && user) router.replace('/');
+    if (mounted && !loading && user) router.replace('/dashboard');
   }, [mounted, loading, user, router]);
 
   return (
@@ -115,10 +115,10 @@ export default function Home() {
           </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
-              <Link href="/login">Sign in</Link>
+              <Link href="/login">Entrar</Link>
             </Button>
             <Button asChild size="sm" className="primary border-0">
-              <Link href="/register">Get started</Link>
+              <Link href="/register">Começar</Link>
             </Button>
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function Home() {
               <h1
                 className="mt-5 text-5xl sm:text-6xl font-black tracking-tight leading-[1.0] animate-fade-up"
               >
-                An <span className='text-gradient'>AI agent</span> to help your employees get all trained and learn your company's business rules. 
+                Um <span className='text-gradient'>agente de IA</span> para treinar seus colaboradores e ensinar as regras de negócio da sua empresa. 
               </h1>
             </div>
             
@@ -145,7 +145,7 @@ export default function Home() {
                   className="mt-5 text-lg text-muted-foreground max-w-xl animate-fade-up"
                   style={{ animationDelay: '120ms' }}
                 >
-                  Daosa is the onboarding IA to your company! With it you can train a bot assistant that can talk to your employees and guide them about all your business rules. Your new employees doesn't need to be insecure about how things works in your company anymore. Daosa can help him!
+                  Daosa é a plataforma para criar e gerenciar agentes de IA especializados nas regras de negócio da sua empresa. Seu agente consulta documentos, páginas da internet e sistemas internos para responder com precisão — no painel web, no WhatsApp e no Telegram. Seus novos colaboradores param de ficar inseguros: a Daosa orienta cada um a qualquer hora.
                 </p>
 
                 <div
@@ -158,12 +158,12 @@ export default function Home() {
                     className="h-12 px-8 text-base primary border-0"
                   >
                     <Link href="/register">
-                      Get started free
+                      Começar grátis
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="h-12 px-8 text-base border-primary/40 hover:primary/5">
-                    <Link href="/login">Sign in</Link>
+                    <Link href="/login">Entrar</Link>
                   </Button>
                 </div>
 
@@ -216,10 +216,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight">
-              Built for extensibility and security
+              Feita para extensibilidade e segurança
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Every provider is registered, every key is namespaced, every row is scoped.
+              Novos canais e ferramentas entram por adaptadores, sem alterar o núcleo. Cada conta acessa somente seus próprios dados e agentes.
             </p>
           </div>
           <div className="mt-14 flex flex-wrap justify-center gap-5">
@@ -246,10 +246,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight">
-              Change apps or data sources anytime
+              Conecte por onde seus colaboradores já falam
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Daosa is built with a modular, plug-and-play architecture. You can effortlessly swap out communication streams or data sources, independently, ensuring zero downtime and total flexibility as your business stack evolves.
+              O mesmo agente atende no painel web, no WhatsApp e no Telegram. Novos canais, integrações MCP e fontes de conhecimento são adicionados por adaptadores, sem mexer no núcleo da plataforma.
             </p>
           </div>
           <div className="mt-12 flex flex-wrap justify-center gap-3">
@@ -271,7 +271,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center">
             <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight">
-              From sign-up to live chat in four steps
+              Do cadastro ao chat ao vivo em quatro etapas
             </h2>
           </div>
           <div className="mt-14 grid md:grid-cols-4 gap-6">
@@ -299,10 +299,10 @@ export default function Home() {
             className="mx-auto object-contain animate-glow"
           />
           <h2 className="mt-6 text-3xl sm:text-4xl font-black tracking-tight">
-            Ready to configure your agent?
+            Pronto para configurar seu agente?
           </h2>
           <p className="mt-4 text-muted-foreground text-lg">
-            Create your org, connect a channel, and chat with Daosa in minutes.
+            Crie sua conta, ensine seu agente com seus documentos e conecte os canais em minutos.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Button
@@ -311,12 +311,12 @@ export default function Home() {
               className="h-12 px-8 text-base primary border-0"
             >
               <Link href="/register">
-                Get started free
+                Começar grátis
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-8 text-base border-primary/40 hover:primary/5">
-              <Link href="/login">Sign in</Link>
+              <Link href="/login">Entrar</Link>
             </Button>
           </div>
         </div>
@@ -327,9 +327,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2.5">
             <Image src="/images/daosa-logo.png" alt="Daosa" width={100} height={28} className="object-contain" />
-            <span className="text-muted-foreground/60"> Dynamic AI Onboarding Specialist Agent</span>
+            <span className="text-muted-foreground/60"> Agente Especialista em Onboarding Dinâmico com IA</span>
           </div>
-          <div>© {new Date().getFullYear()} Daosa. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} Daosa. Todos os direitos reservados.</div>
         </div>
       </footer>
     </div>

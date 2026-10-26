@@ -39,7 +39,7 @@ export function AuthShell({
       {/* Right: brand panel */}
       <div className="hidden lg:flex flex-col justify-center items-center bg-grid">
 
-        <Image className='rounded-xl' src={'/images/auth-s-style1.png'} width={650} height={600} alt='Art to the auth page.'/>
+        <Image className='rounded-xl' src={'/images/auth-s-style1.png'} width={650} height={600} alt='Ilustração da página de autenticação.'/>
 
       </div>
 

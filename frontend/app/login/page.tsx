@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -8,61 +8,64 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get('redirect') || '/';
-  const { login } = useAuth();
+  const redirect = params.get('redirect') || '/dashboard';
+  const { login, token, loading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingForm, setLoadingForm] = useState(false);
+
+  // Rota de não autenticados: se já tem sessão, volta para o dashboard.
+  useEffect(() => {
+    if (!loading && token) router.replace(redirect);
+  }, [loading, token, redirect, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingForm(true);
     try {
       await login(email, password);
-      toast.success('Welcome back!');
       router.push(redirect);
     } catch (err: any) {
-      toast.error(err.message || 'Sign-in failed.');
+      toast.error(err.message || 'Falha ao entrar.');
     } finally {
-      setLoading(false);
+      setLoadingForm(false);
     }
   };
 
   return (
     <AuthShell
-      title="Sign in to Daosa"
-      subtitle="Access your onboarding panel and chat with your agent."
+      title="Entrar na Daosa"
+      subtitle="Acesse seu painel de integração e converse com seu agente."
       footer={
         <>
-          New to Daosa?{' '}
+          Ainda não tem uma conta?{' '}
           <Link href="/register" className="text-primary font-medium hover:underline">
-            Create an account
+            Criar conta
           </Link>
         </>
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">E-mail</Label>
           <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@acme.com"
+            placeholder="voce@empresa.com"
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Senha</Label>
           <Input
             id="password"
             type="password"
@@ -72,9 +75,9 @@ export default function LoginPage() {
             required
           />
         </div>
-        <Button type="submit" className="w-full h-11 bg-primary border-0" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Sign in
+        <Button type="submit" className="w-full h-11 bg-primary border-0" disabled={loadingForm}>
+          {loadingForm && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Entrar
         </Button>
       </form>
     </AuthShell>

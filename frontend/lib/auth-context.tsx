@@ -1,14 +1,9 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { Env } from './env';
+import { api, ApiError, User } from './api';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-}
+export type { User };
 
 interface AuthContextValue {
   user: User | null;
@@ -21,13 +16,16 @@ interface AuthContextValue {
 }
 
 export interface RegisterData {
-  company_name: string;
-  cnpj?: string;
-  email: string;
-  phone?: string;
   name: string;
+  email: string;
+  /** CPF ou CNPJ validado no backend. */
+  document: string;
   password: string;
 }
+
+const TOKEN_STORAGE_KEY = 'auth_token';
+/** Chave antiga de cache de usuário — removida apenas para limpar dados legados. */
+const LEGACY_USER_STORAGE_KEY = 'auth_user';
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
@@ -39,104 +37,67 @@ const AuthContext = createContext<AuthContextValue>({
   refreshUser: async () => {},
 });
 
-const API_BASE = Env.get('API_BASE_URL');
-
-async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
-
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP ${res.status}`);
-  }
-
-  if (res.status === 204) return undefined as T;
-  return res.json();
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadSession = useCallback(async () => {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('auth_user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      try {
-        await refreshUser();
-      } catch {
-        // Token expired or invalid, clear storage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-        setToken(null);
-        setUser(null);
-      }
-    }
-    setLoading(false);
+  const clearSession = useCallback(() => {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+    setToken(null);
+    setUser(null);
   }, []);
 
   const refreshUser = useCallback(async () => {
-    const currentToken = localStorage.getItem('auth_token');
+    const currentToken = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (!currentToken) return;
-    
-    const userData = await fetchApi<User>('/auth/me');
+
+    const userData = await api.user.me();
     setUser(userData);
-    localStorage.setItem('auth_user', JSON.stringify(userData));
   }, []);
+
+  const loadSession = useCallback(async () => {
+    const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+
+    if (storedToken) {
+      setToken(storedToken);
+      try {
+        await refreshUser();
+      } catch (err) {
+        // Token expirado/inválido (401/403) limpa a sessão; erro de rede mantém o token.
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          clearSession();
+        }
+      }
+    }
+    setLoading(false);
+  }, [refreshUser, clearSession]);
 
   useEffect(() => {
     loadSession();
   }, [loadSession]);
 
   const login = async (email: string, password: string) => {
-    const data = await fetchApi<{ token: string; user: User }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('auth_user', JSON.stringify(data.user));
-    setToken(data.token);
+    const data = await api.user.login({ email, password });
+
+    // Somente o token é persistido; o usuário fica só em estado (buscado via /user/me).
+    localStorage.setItem(TOKEN_STORAGE_KEY, data.access_token);
+    setToken(data.access_token);
     setUser(data.user);
   };
 
   const register = async (formData: RegisterData) => {
-    const data = await fetchApi<{ token: string; user: User }>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(formData),
-    });
-    
-    localStorage.setItem('auth_token', data.token);
-    localStorage.setItem('auth_user', JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
+    await api.user.register(formData);
+
+    // O registro não retorna token — autentica em seguida.
+    await login(formData.email, formData.password);
   };
 
   const logout = async () => {
-    try {
-      await fetchApi('/auth/logout', { method: 'POST' });
-    } catch {
-      // Ignore logout API errors
-    } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      setToken(null);
-      setUser(null);
-    }
+    // O backend não possui endpoint de logout; o JWT é invalidado apenas pela expiração.
+    clearSession();
   };
 
   return (

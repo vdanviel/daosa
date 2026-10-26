@@ -116,10 +116,5 @@
     0%, 100% { filter: drop-shadow(0 0 12px hsl(252, 72%, 62% / 0.5)); }
     50% { filter: drop-shadow(0 0 28px hsl(252, 72%, 62% / 0.8)); }
   }
-  /* Sidebar active gradient */
-  .nav-active {
-    background: linear-gradient(90deg, hsl(252, 72%, 55%) 0%, hsl(258, 65%, 65%) 100%);
-    color: white;
-    box-shadow: 0 2px 12px hsl(252, 72%, 55% / 0.35);
-  }
+
 }

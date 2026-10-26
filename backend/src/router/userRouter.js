@@ -17,6 +17,11 @@ userRouter.get('/all', [
     UserController.all(req.query.page, req.query.size, req.query.search).then(result => res.status(200).send(result)).catch(next);
 });
 
+// dados estatisticos
+userRouter.get('/dashboard', isAuth, (req, res, next) => {
+    UserController.dashboard(req.auth.data.sub).then(result => res.status(200).send(result)).catch(next);
+});
+
 userRouter.post('/register', [
     body('name').exists().notEmpty().withMessage('Preencha o nome.'),
     body('email').exists().isEmail().withMessage('Email inválido.'),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -8,135 +8,121 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { useAuth, RegisterData } from '@/lib/auth-context';
-import { maskCnpj, maskPhone } from '@/lib/utils';
+import { maskDocument, isValidDocument } from '@/lib/utils';
 
 export default function RegisterPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get('redirect') || '/';
-  const { register } = useAuth();
+  const redirect = params.get('redirect') || '/dashboard';
+  const { register, token, loading } = useAuth();
 
   const [form, setForm] = useState<RegisterData>({
-    company_name: '',
-    cnpj: '',
-    email: '',
-    phone: '',
     name: '',
+    email: '',
+    document: '',
     password: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [loadingForm, setLoadingForm] = useState(false);
 
-  const update = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
+  // Rota de não autenticados: se já tem sessão, volta para o dashboard.
+  useEffect(() => {
+    if (!loading && token) router.replace(redirect);
+  }, [loading, token, redirect, router]);
+
+  const update = (k: keyof RegisterData, v: string) => setForm((s) => ({ ...s, [k]: v }));
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.email || !form.password || !form.company_name || !form.name) {
-      toast.error('Please fill all required fields.');
+    if (!form.name || !form.email || !form.document || !form.password) {
+      toast.error('Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (!isValidDocument(form.document)) {
+      toast.error('Informe um CPF ou CNPJ válido.');
       return;
     }
 
     if (form.password.length < 6) {
-      toast.error('Password must be at least 6 characters.');
+      toast.error('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
 
-    setLoading(true);
+    setLoadingForm(true);
 
     try {
       await register(form);
-      toast.success('Account created. Welcome to Daosa!');
+      toast.success('Conta criada. Bem-vindo à Daosa!');
       router.push(redirect);
     } catch (err: any) {
-      toast.error(err.message || 'Registration failed.');
+      toast.error(err.message || 'Falha no cadastro.');
     } finally {
-      setLoading(false);
+      setLoadingForm(false);
     }
   };
 
   return (
     <AuthShell
-      title="Create your organization"
-      subtitle="You'll become the master tenant of a new org."
+      title="Crie sua conta"
+      subtitle="Cadastre-se com seu CPF ou CNPJ para começar a usar a Daosa."
       footer={
         <>
-          Already have an account?{' '}
+          Já tem uma conta?{' '}
           <Link href="/login" className="text-primary font-medium hover:underline">
-            Sign in
+            Entrar
           </Link>
         </>
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="company_name">Company name *</Label>
-          <Input
-            id="company_name"
-            value={form.company_name}
-            onChange={(e) => update('company_name', e.target.value)}
-            placeholder="Acme Inc."
-            required
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="cnpj">CNPJ</Label>
-            <Input
-              id="cnpj"
-              value={form.cnpj}
-              onChange={(e) => update('cnpj', maskCnpj(e.target.value))}
-              placeholder="00.000.000/0000-00"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              value={form.phone}
-              onChange={(e) => update('phone', maskPhone(e.target.value))}
-              placeholder="+55 11 99999-9999"
-            />
-          </div>
-        </div>
-        <div className="h-px bg-border my-2" />
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Your name *</Label>
+          <Label htmlFor="name">Seu nome *</Label>
           <Input
             id="name"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            placeholder="Jane Doe"
+            placeholder="Maria Silva"
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="email">E-mail *</Label>
           <Input
             id="email"
             type="email"
             value={form.email}
             onChange={(e) => update('email', e.target.value)}
-            placeholder="you@acme.com"
+            placeholder="voce@empresa.com"
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password *</Label>
+          <Label htmlFor="document">CPF ou CNPJ *</Label>
+          <Input
+            id="document"
+            value={form.document}
+            onChange={(e) => update('document', maskDocument(e.target.value))}
+            placeholder="000.000.000-00"
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Senha *</Label>
           <Input
             id="password"
             type="password"
             value={form.password}
             onChange={(e) => update('password', e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder="Mínimo de 6 caracteres"
             required
           />
         </div>
-        <Button type="submit" className="w-full h-11 bg-primary border-0 shadow-md shadow-primary/25" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create account
+        <Button type="submit" className="w-full h-11 bg-primary border-0 shadow-md shadow-primary/25" disabled={loadingForm}>
+          {loadingForm && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Criar conta
         </Button>
       </form>
     </AuthShell>

@@ -18,14 +18,15 @@ class Controller {
 
 	}
 
-	async findAll(page = 1, size = 10, search = '') {
+	async findAll(page = 1, size = 10, search = '', user_id) {
 		page = Math.max(1, parseInt(page, 10) || 1);
 		size = Math.max(1, parseInt(size, 10) || 10);
 		search = typeof search === 'string' ? search.trim() : '';
 
 		const isNumericSearch = /^\d+$/.test(search);
-		const where = search ? {
-			[Op.or]: [
+		const where = { user_id };
+		if (search) {
+			where[Op.or] = [
 				{ '$agent.name$': { [Op.like]: `%${search}%` } },
 				{ '$user.name$': { [Op.like]: `%${search}%` } },
 				{ '$user.document$': { [Op.like]: `%${search}%` } },
@@ -33,8 +34,8 @@ class Controller {
 					{ agent_id: search },
 					{ user_id: search }
 				] : [])
-			]
-		} : {};
+			];
+		}
 		const { rows, count: total } = await Conversation.findAndCountAll({
 			where,
 			include: [
@@ -124,7 +125,7 @@ class Controller {
 	}
 
 	async delete(id) {
-		const record = await Conversation.findOne(id);
+		const record = await Conversation.findByPk(id);
 
 		if (!record) {
 			const error = new Error('Conversa não encontrado.');
@@ -132,6 +133,10 @@ class Controller {
 			throw error;
 		}
 
+		// A tabela `message` não possui FK com ON DELETE CASCADE (o schema veio
+		// do sequelize.sync), então as mensagens são removidas explicitamente
+		// antes da conversa, para não deixar registros órfãos.
+		await Message.destroy({ where: { conversation_id: id } });
 		await record.destroy();
 
 		return { message: 'Conversa deletada com sucesso.' };

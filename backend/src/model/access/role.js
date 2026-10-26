@@ -14,8 +14,6 @@ const Role = sequelize.define('Role', {
   timestamps: false
 });
 
-sequelize.sync();
-
 async function initializeDefaultRole() {
   await Role.findOrCreate({
     where: { name: 'user-role' },

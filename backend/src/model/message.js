@@ -16,6 +16,4 @@ const Message = sequelize.define('Message', {
   timestamps: false
 });
 
-sequelize.sync();
-
 export { Message };

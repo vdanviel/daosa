@@ -2,52 +2,47 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const values = Object.freeze({
-  APP_NAME: process.env.APP_NAME || 'Company',
-  CURRENT_ENVIRONMENT: process.env.CURRENT_ENVIRONMENT || 'dev',
-  DB_NAME: process.env.DB_NAME || '',
-  DB_USER: process.env.DB_USER || '',
-  DB_PASSWORD: process.env.DB_PASSWORD || '',
-  DB_HOST: process.env.DB_HOST || '127.0.0.1',
-  DB_PORT: Number(process.env.DB_PORT || 3306),
-  DB_DIALECT: process.env.DB_DIALECT || 'mysql',
-  JWT_SECRET: process.env.JWT_SECRET,
-  MAIL_HOST: process.env.MAIL_HOST,
-  MAIL_PORT: process.env.MAIL_PORT,
-  MAIL_USERNAME: process.env.MAIL_USERNAME,
-  MAIL_PASSWORD: process.env.MAIL_PASSWORD,
-  MAIL_FROM_ADDRESS: process.env.MAIL_FROM_ADDRESS,
-  MAIL_FROM_NAME: process.env.MAIL_FROM_NAME,
-  PORT: Number(process.env.PORT || 3000),
-  SESSION_SECRET_PASS: process.env.SESSION_SECRET_PASS,
-  SPA_APPLICATION_URL: process.env.SPA_APPLICATION_URL,
-  LLM_PROVIDER: process.env.LLM_PROVIDER,
-  LLM_BASE_URL: process.env.LLM_BASE_URL,
-  LLM_MODEL: process.env.LLM_MODEL
-});
-
 class Env {
-  static getAppName() { return values.APP_NAME; }
-  static getCurrentEnvironment() { return values.CURRENT_ENVIRONMENT; }
-  static getDbName() { return values.DB_NAME; }
-  static getDbUser() { return values.DB_USER; }
-  static getDbPassword() { return values.DB_PASSWORD; }
-  static getDbHost() { return values.DB_HOST; }
-  static getDbPort() { return values.DB_PORT; }
-  static getDbDialect() { return values.DB_DIALECT; }
-  static getJwtSecret() { return values.JWT_SECRET; }
-  static getMailHost() { return values.MAIL_HOST; }
-  static getMailPort() { return values.MAIL_PORT; }
-  static getMailUsername() { return values.MAIL_USERNAME; }
-  static getMailPassword() { return values.MAIL_PASSWORD; }
-  static getMailFromAddress() { return values.MAIL_FROM_ADDRESS; }
-  static getMailFromName() { return values.MAIL_FROM_NAME; }
-  static getPort() { return values.PORT; }
-  static getSessionSecretPass() { return values.SESSION_SECRET_PASS; }
-  static getSpaApplicationUrl() { return values.SPA_APPLICATION_URL; }
-  static getLlmProvider() { return values.LLM_PROVIDER; }
-  static getLlmUrl() { return values.LLM_BASE_URL; }
-  static getLlmModel() { return values.LLM_MODEL; }
+
+  static getAppName() { return process.env.APP_NAME || 'Company'; }
+  static getCurrentEnvironment() { return process.env.CURRENT_ENVIRONMENT || 'dev'; }
+  static getDbName() { return process.env.DB_NAME || ''; }
+  static getDbUser() { return process.env.DB_USER || ''; }
+  static getDbPassword() { return process.env.DB_PASSWORD || ''; }
+  static getDbHost() { return process.env.DB_HOST || '127.0.0.1'; }
+  static getDbPort() { return Number(process.env.DB_PORT || 3306); }
+  static getDbDialect() { return process.env.DB_DIALECT || 'mysql'; }
+  static getJwtSecret() { return process.env.JWT_SECRET; }
+  static getMailHost() { return process.env.MAIL_HOST; }
+  static getMailPort() { return process.env.MAIL_PORT; }
+  static getMailUsername() { return process.env.MAIL_USERNAME; }
+  static getMailPassword() { return process.env.MAIL_PASSWORD; }
+  static getMailFromAddress() { return process.env.MAIL_FROM_ADDRESS; }
+  static getMailFromName() { return process.env.MAIL_FROM_NAME; }
+  static getPort() { return Number(process.env.PORT || 3000); }
+  static getSessionSecretPass() { return process.env.SESSION_SECRET_PASS; }
+  static getSpaApplicationUrl() { return process.env.SPA_APPLICATION_URL; }
+  static getLlmProvider() { return process.env.LLM_PROVIDER; }
+  static getLlmUrl() { return process.env.LLM_BASE_URL; }
+  static getLlmModel() { return process.env.LLM_MODEL; }
+  static getEmbeddingLlmProvider() { return process.env.EMBEDDING_LLM_PROVIDER; }
+  static getEmbeddingLlmUrl() { return process.env.EMBEDDING_LLM_BASE_URL; }
+  static getEmbeddingLlmModel() { return process.env.EMBEDDING_LLM_MODEL; }
+  static getInputChunkLimit() { return process.env.INPUT_CHUNK_LIMIT; }
+  static getInputOverlap() { return process.env.INPUT_OVERLAP; }
+  static getRedisHostname() { return process.env.REDIS_HOSTNAME; }
+  static getRedisPort() { return process.env.REDIS_PORT; }
+  static getRedisPassword() { return process.env.REDIS_PASSWORD; }
+  static getQdrantHost() { return process.env.QDRANT_HOST; }
+  static getQdrantApiKey() { return process.env.QDRANT_API_KEY; }
+  static getQdrantPort() { return process.env.QDRANT_PORT; }
+  static getQdrantCollection() { return process.env.QDRANT_COLLECTION; }
+  static getQdrantDimensions() { return process.env.QDRANT_DIMENSIONS; }
+  static getGoogleClientId() { return process.env.GOOGLE_CLIENT_ID; }
+  static getGoogleClientSecret() { return process.env.GOOGLE_CLIENT_SECRET; }
+  static getGoogleRedirectUri() { return process.env.GOOGLE_REDIRECT_URI; }
+
+
 
   static validate() {
     const weakSecrets = [
@@ -68,6 +63,7 @@ class Env {
       throw new Error('Invalid environment configuration: PORT must be an integer between 1 and 65535.');
     }
   }
+
 }
 
 export default Env;

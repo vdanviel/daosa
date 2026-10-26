@@ -26,6 +26,4 @@ const Conversation = sequelize.define('Conversation',
 Conversation.belongsTo(Agent, { foreignKey: 'agent_id', as: 'agent' });
 Conversation.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-sequelize.sync();
-
 export { Conversation };

@@ -1,14 +1,17 @@
 import { User } from '../model/user.js';
+import { Agent } from '../model/agent.js';
+import { Conversation } from '../model/conversation.js';
+import { Message } from '../model/message.js';
 import { PersonalAccessTokenController } from './access/PersonalAccessTokenController.js';
 import { authController } from './access/AuthController.js';
 import { roleController } from './access/RoleController.js';
 import Util from '../util/Util.js';
-import { sender as mailSender } from '../mail/MailSender.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { Op } from 'sequelize';
+import { Op, fn, col } from 'sequelize';
 import Env from '../util/Env.js';
+import { emailQueue } from '../jobs/queue.js';
 
 const withoutPassword = (user) => {
     const { password_hash, ...safeUser } = user.get({ plain: true });
@@ -51,6 +54,82 @@ class Controller {
         };
     }
 
+    /**
+     * Agregados da tela de visão geral em UMA chamada.
+     *
+     * Antes o frontend fazia 2 + N requisições (agentes, conversas e uma chamada
+     * por conversa só para contar mensagens); aqui tudo sai de 3 queries fixas.
+     */
+    async dashboard(user_id) {
+        const [agents, conversations] = await Promise.all([
+            Agent.findAll({
+                where: { user_id },
+                attributes: ['id', 'name', 'objective', 'status'],
+                order: [['created_at', 'DESC']]
+            }),
+            Conversation.findAll({
+                where: { user_id },
+                attributes: ['id', 'agent_id', 'status']
+            })
+        ]);
+
+        // Total de mensagens agrupado por conversa — uma query só, sem N+1.
+        const conversationIds = conversations.map((c) => c.id);
+        const messageRows = conversationIds.length
+            ? await Message.findAll({
+                attributes: ['conversation_id', [fn('COUNT', col('id')), 'total']],
+                where: { conversation_id: { [Op.in]: conversationIds } },
+                group: ['conversation_id'],
+                raw: true
+            })
+            : [];
+
+        const messagesByConversation = new Map(
+            messageRows.map((r) => [Number(r.conversation_id), Number(r.total)])
+        );
+
+        // Acumula conversas e mensagens por agente.
+        const perAgent = new Map();
+        for (const conversation of conversations) {
+            const key = Number(conversation.agent_id);
+            const entry = perAgent.get(key) ?? { conversations: 0, open_conversations: 0, messages: 0 };
+            entry.conversations += 1;
+            if (conversation.status === 'open') entry.open_conversations += 1;
+            entry.messages += messagesByConversation.get(Number(conversation.id)) ?? 0;
+            perAgent.set(key, entry);
+        }
+
+        const byAgent = agents.map((agent) => {
+            const stats = perAgent.get(Number(agent.id)) ?? { conversations: 0, open_conversations: 0, messages: 0 };
+            return {
+                id: agent.id,
+                name: agent.name,
+                objective: agent.objective,
+                status: agent.status,
+                ...stats
+            };
+        });
+
+        const countBy = (list, status) => list.filter((item) => item.status === status).length;
+        const messagesTotal = [...messagesByConversation.values()].reduce((sum, n) => sum + n, 0);
+
+        return {
+            agents: {
+                total: agents.length,
+                active: countBy(agents, 'active'),
+                draft: countBy(agents, 'draft'),
+                archived: countBy(agents, 'archived')
+            },
+            conversations: {
+                total: conversations.length,
+                open: countBy(conversations, 'open'),
+                closed: countBy(conversations, 'closed')
+            },
+            messages: { total: messagesTotal },
+            by_agent: byAgent
+        };
+    }
+
     async register(name, document, email, password) {
 
         if (!Util.isValidDocument(document)) {
@@ -75,11 +154,7 @@ class Controller {
             status: 'active'
         });
 
-        try {
-            await mailSender.sendUserWelcomeEmail(email, name);
-        } catch (error) {
-            console.error('Erro ao enviar email de boas-vindas:', error);
-        }
+        await emailQueue.add('send-welcome-email', { name, email });
 
         return withoutPassword(user);
     }
@@ -162,7 +237,11 @@ class Controller {
         );
 
         try {
-            await mailSender.sendPasswordResetEmail(user.email, user.name, code);
+            await emailQueue.add('send-password-reset-email', {
+                email: user.email,
+                name: user.name,
+                code
+            });
         } catch (error) {
             console.error('Erro ao enviar email de redefinição de senha:', error);
             const err = new Error('Falha ao enviar email de redefinição de senha.');
@@ -222,7 +301,12 @@ class Controller {
             'user_change_email', user.id, newEmail, secret, code, null, Date.now(), expiresAt
         );
         try {
-            await mailSender.sendEmailChangeConfirmation(newEmail, user.name, code, secret);
+            await emailQueue.add('send-email-change-confirmation', {
+                email: newEmail,
+                name: user.name,
+                code,
+                secret
+            });
         } catch (error) {
             console.error('Erro ao enviar email de confirmação de mudança:', error);
             const err = new Error('Falha ao enviar email de confirmação de mudança.');

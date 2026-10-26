@@ -58,7 +58,9 @@ class Controller {
 			where,
 			offset: (page - 1) * size,
 			limit: size,
-			order: [['created_at', 'DESC']]
+			// Mesmo desempate de `findByConversation` — senão a listagem geral
+			// também fica instável quando há mensagens no mesmo segundo.
+			order: [['created_at', 'DESC'], ['id', 'DESC']]
 		});
 
 		return {
@@ -84,10 +86,11 @@ class Controller {
 		size = Math.max(1, parseInt(size, 10) || 50);
 
 		const { rows, count: total } = await Message.findAndCountAll({
-			where: { conversation_id },
+			where: { conversation_id: conversation_id },
 			offset: (page - 1) * size,
 			limit: size,
-			order: [['created_at', 'ASC']]
+
+			order: [['created_at', 'ASC'], ['id', 'ASC']]
 		});
 
 		return {

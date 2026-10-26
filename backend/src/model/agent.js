@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../connection/database.js';
+import { Channel } from './channel.js';
 
 const Agent = sequelize.define('Agent', {
   id: { 
@@ -17,13 +18,14 @@ const Agent = sequelize.define('Agent', {
     allowNull: true 
   },
   description: { 
-    type: DataTypes.STRING(100), 
+    type: DataTypes.TEXT, 
     allowNull: true,
   },
   objective: { 
-    type: DataTypes.TEXT, 
+    type: DataTypes.STRING(30), 
     allowNull: true 
   },
+  channel_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true },
   status: { 
     // Assumindo alguns valores comuns para o enum além de 'draft'
     type: DataTypes.ENUM('draft', 'active', 'archived'), 
@@ -70,6 +72,11 @@ const Agent = sequelize.define('Agent', {
   paranoid: true // Ativa o Soft Delete usando o campo deleted_at
 });
 
-sequelize.sync();
+Agent.belongsTo(Channel, {
+  foreignKey: 'channel_id',
+  as: 'channel',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
 
 export { Agent };
