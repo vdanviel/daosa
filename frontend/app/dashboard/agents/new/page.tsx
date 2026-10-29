@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { api, ApiError } from '@/lib/api';
 import { ChannelPicker } from '@/components/agents/channel-picker';
 import { DocumentsSection } from '@/components/agents/documents-section';
+import { type AgentDocument } from '@/lib/docs-stash';
 import {
   AGENT_LIMITS,
   type AgentForm,
@@ -24,6 +25,8 @@ export default function NewAgentPage() {
   const router = useRouter();
   const [form, setForm] = useState<AgentForm>(emptyAgentForm);
   const [saving, setSaving] = useState(false);
+  /** Documentos staged (com `File`) aguardando o submit — enviados ao criar o agente. */
+  const [stagedDocs, setStagedDocs] = useState<AgentDocument[]>([]);
   /** Falha do cadastro, exibida logo abaixo do formulário. */
   const [error, setError] = useState<string | null>(null);
 
@@ -60,7 +63,15 @@ export default function NewAgentPage() {
 
     setSaving(true);
     try {
-      await api.agent.register(agentFormPayload(form));
+      const created: any = await api.agent.register(agentFormPayload(form));
+      // Envia os documentos staged para indexação RAG no agente recém-criado.
+      const newAgentId = created?.id;
+      const files = stagedDocs
+        .filter((doc) => doc.origin === 'upload' && doc.file)
+        .map((doc) => doc.file as File);
+      if (newAgentId && files.length > 0) {
+        await api.agent.uploadKnowledge(newAgentId, files);
+      }
       // Sem aviso de sucesso: volta para a lista, onde o novo agente já aparece.
       router.push('/dashboard/agents');
     } catch (err: any) {
@@ -130,7 +141,7 @@ export default function NewAgentPage() {
 
             <ChannelPicker value={form.channelId} onChange={(id) => update('channelId', id)} />
 
-            <DocumentsSection form={form} returnPath="/dashboard/agents/new" />
+            <DocumentsSection form={form} returnPath="/dashboard/agents/new" onStagedChange={setStagedDocs} />
 
             <div className="rounded-lg border border-border/60 bg-background/60 p-3">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Archive, ArchiveRestore, Bot, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Bot, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,6 +48,7 @@ import {
   emptyAgentForm,
   validateAgentForm,
 } from '@/lib/agent-form';
+import { type AgentDocument } from '@/lib/docs-stash';
 
 const PAGE_SIZE = 10;
 
@@ -88,6 +90,9 @@ export default function AgentsPage() {
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  /** Documentos staged (com `File`) aguardando o submit — enviados no update. */
+  const [stagedDocs, setStagedDocs] = useState<AgentDocument[]>([]);
+
   /** Agente aberto no diálogo de edição (null = fechado). */
   const [editing, setEditing] = useState<any | null>(null);
   /** Evita aplicar o fetch de detalhe de um modal que já foi fechado. */
@@ -106,6 +111,29 @@ export default function AgentsPage() {
   /** ID do agente aguardando confirmação de exclusão. */
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [isMobileEditFormOpen, setIsMobileEditFormOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [uploadLimits, setUploadLimits] = useState<any>(null);
+  const [agentSources, setAgentSources] = useState<any[]>([]);
+
+  useEffect(() => {
+    const check = () => setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    api.source.limits()
+      .then((data: any) => setUploadLimits(data))
+      .catch(() => {
+        setUploadLimits({
+          maxFiles: 10,
+          maxFileSizeMB: 20,
+          allowedTypes: ['PDF', 'TXT', 'MD', 'DOC', 'DOCX', 'PPT', 'PPTX', 'CSV', 'JSON'],
+        });
+      });
+  }, []);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -184,6 +212,7 @@ export default function AgentsPage() {
 
   const openEdit = (agent: any) => {
     setFormError(null);
+    setStagedDocs([]);
     setForm(formFromAgent(agent));
     setEditing(agent);
 
@@ -202,12 +231,27 @@ export default function AgentsPage() {
           // Mantém o formulário com o que a listagem trouxe.
         });
     }
+
+    // Em dispositivos móveis, abrir o formulário como sobreposição (sem modal)
+    if (isMobile) {
+      setIsMobileEditFormOpen(true);
+    }
+
+    // Busca fontes de conhecimento do agente
+    if (agent?.id) {
+      api.source.knowledge(agent.id)
+        .then((list: any) => setAgentSources(list?.data ?? list ?? []))
+        .catch(() => setAgentSources([]));
+    }
   };
 
   const closeEdit = () => {
     editingIdRef.current = null;
     setFormError(null);
     setEditing(null);
+    setIsMobileEditFormOpen(false);
+    setStagedDocs([]);
+    setAgentSources([]);
   };
 
   const onEditSubmit = async (e: React.FormEvent) => {
@@ -225,9 +269,26 @@ export default function AgentsPage() {
 
       const updated = await api.agent.update(editing.id, agentFormPayload(form));
       setAgents((prev) => (prev ?? []).map((a) => (a.id === editing.id ? { ...a, ...(updated as any) } : a)));
+
+      // Envia os documentos staged (upload local) para indexação RAG no agente.
+      const files = stagedDocs
+        .filter((doc) => doc.file)
+        .map((doc) => doc.file as File);
+      if (files.length > 0) {
+        await api.agent.uploadKnowledge(editing.id, files);
+      }
+
+      setStagedDocs([]);
       closeEdit();
     } catch (err: any) {
-      setFormError(err instanceof ApiError ? err.message : `Falha ao salvar o agente: ${err?.message ?? err}`);
+      let msg = err instanceof ApiError ? err.message : `Falha ao salvar o agente: ${err?.message ?? err}`;
+      if (msg.toLowerCase().includes('file too large') || msg.toLowerCase().includes('multer')) {
+        const limit = uploadLimits?.maxFileSizeMB ?? 20;
+        msg = `O arquivo é muito grande. O limite de tamanho é ${limit}MB. Se necessário, comprima ou divida o arquivo.`;
+      } else if (msg.toLowerCase().includes('unsupported') || msg.toLowerCase().includes('file type')) {
+        msg = `Tipo de arquivo não aceito. Extensões permitidas: ${uploadLimits?.allowedTypes?.join(', ') ?? 'PDF, TXT, MD, DOC, DOCX, PPT, PPTX, CSV, JSON'}.`;
+      }
+      setFormError(msg);
     } finally {
       setSaving(false);
     }
@@ -266,6 +327,151 @@ export default function AgentsPage() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  // Componente de sobreposição móvel para o formulário de edição
+  const MobileEditOverlay = () => {
+    if (!isMobile || !isMobileEditFormOpen || !editing) return null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[60] bg-background md:hidden">
+        <div className="h-full w-full overflow-y-auto">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-semibold">Editar agente</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeEdit}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="p-4 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="agent-name-mobile">Nome *</Label>
+              <Input
+                id="agent-name-mobile"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Ex.: Agente de onboarding"
+                maxLength={30}
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="agent-objective-mobile">Objetivo *</Label>
+              <Input
+                id="agent-objective-mobile"
+                value={form.objective}
+                onChange={(e) => setForm((f) => ({ ...f, objective: e.target.value }))}
+                placeholder="Descreva o papel do agente e o que ele deve fazer."
+                maxLength={30}
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="agent-description-mobile">Descrição</Label>
+              <Textarea
+                id="agent-description-mobile"
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Contexto adicional detalhado."
+                maxLength={150}
+                rows={3}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                {form.description.length}/150 caracteres
+              </p>
+            </div>
+
+            <ChannelPicker value={form.channelId} onChange={(id) => setForm((f) => ({ ...f, channelId: id }))} />
+
+            <DocumentsSection form={form} returnPath={`/dashboard/agents?edit=${editing?.id ?? ''}`} onStagedChange={setStagedDocs} uploadLimits={uploadLimits} sources={agentSources} onDeleteSource={(id) => setAgentSources((prev) => prev.filter((s: any) => s.id !== id))} />
+
+            <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Configuração do modelo
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="agent-temp-mobile" className="text-xs">Temperatura</Label>
+                  <Input
+                    id="agent-temp-mobile"
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    max={2}
+                    value={form.temp}
+                    onChange={(e) => setForm((f) => ({ ...f, temp: e.target.value }))}
+                    placeholder="0.7"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="agent-top-p-mobile" className="text-xs">Top P</Label>
+                  <Input
+                    id="agent-top-p-mobile"
+                    type="number"
+                    step="0.05"
+                    min={0}
+                    max={1}
+                    value={form.topP}
+                    onChange={(e) => setForm((f) => ({ ...f, topP: e.target.value }))}
+                    placeholder="0.9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="agent-num-predict-mobile" className="text-xs">Limite de tokens</Label>
+                  <Input
+                    id="agent-num-predict-mobile"
+                    type="number"
+                    step="1"
+                    min={1}
+                    value={form.numPredict}
+                    onChange={(e) => setForm((f) => ({ ...f, numPredict: e.target.value }))}
+                    placeholder="300"
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Deixe em branco para manter o valor atual.
+              </p>
+            </div>
+
+            {formError && (
+              <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {formError}
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeEdit}
+                disabled={saving}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                onClick={onEditSubmit}
+                disabled={saving}
+                className="flex-1"
+              >
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
   };
 
   return (
@@ -440,9 +646,12 @@ export default function AgentsPage() {
         </>
       )}
 
+      {/* ------------------------------ EDIÇÃO MÓVEL ------------------------------ */}
+      <MobileEditOverlay />
+
       {/* ------------------------------ EDIÇÃO -------------------------------- */}
-      <Dialog open={!!editing} onOpenChange={(open) => !open && closeEdit()}>
-        <DialogContent className="max-w-xl">
+      <Dialog open={!!editing && !isMobile} onOpenChange={(open) => !open && closeEdit()}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar agente</DialogTitle>
             <DialogDescription>
@@ -492,7 +701,7 @@ export default function AgentsPage() {
 
             <ChannelPicker value={form.channelId} onChange={(id) => setForm((f) => ({ ...f, channelId: id }))} />
 
-            <DocumentsSection form={form} returnPath={`/dashboard/agents?edit=${editing?.id ?? ''}`} />
+            <DocumentsSection form={form} returnPath={`/dashboard/agents?edit=${editing?.id ?? ''}`} onStagedChange={setStagedDocs} uploadLimits={uploadLimits} sources={agentSources} onDeleteSource={(id) => setAgentSources((prev) => prev.filter((s: any) => s.id !== id))} />
 
             <div className="rounded-lg border border-border/60 bg-background/60 p-3">
               <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

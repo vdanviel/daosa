@@ -25,24 +25,36 @@ class Env {
   static getLlmProvider() { return process.env.LLM_PROVIDER; }
   static getLlmUrl() { return process.env.LLM_BASE_URL; }
   static getLlmModel() { return process.env.LLM_MODEL; }
+  static getllmApiKey() { return process.env.LLM_API_KEY; }
   static getEmbeddingLlmProvider() { return process.env.EMBEDDING_LLM_PROVIDER; }
   static getEmbeddingLlmUrl() { return process.env.EMBEDDING_LLM_BASE_URL; }
   static getEmbeddingLlmModel() { return process.env.EMBEDDING_LLM_MODEL; }
-  static getInputChunkLimit() { return process.env.INPUT_CHUNK_LIMIT; }
-  static getInputOverlap() { return process.env.INPUT_OVERLAP; }
+  static getEmbeddingApiKey() { return process.env.EMBEDDING_LLM_API_KEY; }
+  static getEmbeddingLlmDimensions() {
+    const value = process.env.EMBEDDING_LLM_DIMENSIONS?.trim();
+    if (!value) return undefined;
+
+    const dimensions = Number(value);
+    if (!Number.isInteger(dimensions) || dimensions <= 0) {
+      throw new Error('EMBEDDING_LLM_DIMENSIONS must be a positive integer.');
+    }
+
+    return dimensions;
+  }
+  static getInputChunkLimit() { return Number(process.env.INPUT_CHUNK_LIMIT); }
+  static getInputOverlap() { return Number(process.env.INPUT_OVERLAP); }
   static getRedisHostname() { return process.env.REDIS_HOSTNAME; }
   static getRedisPort() { return process.env.REDIS_PORT; }
   static getRedisPassword() { return process.env.REDIS_PASSWORD; }
-  static getQdrantHost() { return process.env.QDRANT_HOST; }
+  static getQdrantHost() { return process.env.QDRANT_HOST || process.env.QDRANT_URL || 'localhost'; }
   static getQdrantApiKey() { return process.env.QDRANT_API_KEY; }
-  static getQdrantPort() { return process.env.QDRANT_PORT; }
-  static getQdrantCollection() { return process.env.QDRANT_COLLECTION; }
-  static getQdrantDimensions() { return process.env.QDRANT_DIMENSIONS; }
+  static getQdrantPort() { return Number(process.env.QDRANT_PORT || 6333); }
+  static getQdrantCollection() { return process.env.QDRANT_COLLECTION || 'daosa'; }
   static getGoogleClientId() { return process.env.GOOGLE_CLIENT_ID; }
   static getGoogleClientSecret() { return process.env.GOOGLE_CLIENT_SECRET; }
   static getGoogleRedirectUri() { return process.env.GOOGLE_REDIRECT_URI; }
-
-
+  static getUploadFileSizeLimit() { return process.env.UPLOAD_FILE_SIZE_LIMIT; }
+  static getUploadMaxFilesLimit() { return process.env.UPLOAD_MAX_FILE_REQUEST_LIMIT; }
 
   static validate() {
     const weakSecrets = [

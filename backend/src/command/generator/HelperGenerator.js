@@ -44,7 +44,7 @@ class HelperGenerator {
             };
 
             await this.#generateFile(
-                path.join(this.#templateFilePath, "helperTemplate.js"),
+                path.join(this.#templateFilePath, "HelperTemplate.js"),
                 path.join(this.#helperPath, `${titleHelperName}Helper.js`),
                 replacements
             );

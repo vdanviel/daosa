@@ -16,7 +16,7 @@ const Integration = sequelize.define('Integration',
     credentials: { type: DataTypes.TEXT, allowNull: true },
     metadata: { type: DataTypes.JSON, allowNull: true },
     status: {
-      type: DataTypes.ENUM('active', 'processing', 'revoked', 'error' ),
+      type: DataTypes.ENUM('active', 'processing', 'revoked', 'expired', 'error'),
       allowNull: false,
       defaultValue: 'active'
     },

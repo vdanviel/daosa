@@ -17,6 +17,7 @@ export const errorHandler = (err, req, res, next) => {
     res.status(statusCode).json({
 		type: type,
         error: message,
+        ...(err.code !== undefined && { code: err.code }),
         ...(Utils.getCurrentEnroviment() === 'dev' && { stack: err.stack })
     });
 };

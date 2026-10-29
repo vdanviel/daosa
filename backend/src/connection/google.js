@@ -25,7 +25,7 @@ export function getGoogleAuthorizationUrl(state) {
   }
 
   return getGoogleOAuthClient().generateAuthUrl({
-    access_type: 'online',
+    access_type: 'offline',
     include_granted_scopes: true,
     prompt: 'consent',
     scope: [
@@ -34,7 +34,7 @@ export function getGoogleAuthorizationUrl(state) {
       'profile',
       'https://www.googleapis.com/auth/drive.readonly'
     ],
-    state: state //mitigar falsificação de solicitação entre google e daosa
+    state: state // mitigates request forgery between Google and daosa
   });
 }
 
@@ -48,15 +48,78 @@ export async function getUserAcessTokens(code) {
   return tokens;
 }
 
-export function createGoogleDriveClient(credentials) {
+/**
+ * @param {import('../models/Integration.js').Integration} integration
+ */
+export async function refreshGoogleCredentials(integration) {
 
-  if (!credentials || typeof credentials !== 'object' || !credentials.access_token) {
-    throw new Error('Valid Google OAuth credentials with an access token are required.');
+  if (!integration) throw new Error('Invalid integration.', { status: 500 });
+
+  if (!integration.credentials || integration.status === 'expired') {
+    integration.status = 'expired';
+    await integration.save();
+
+    const error = new Error('Google account needs to be connected again.');
+    error.code = 'REAUTH_GOOGLE_ACCOUNT';
+    error.status = 401;
+    throw error;
+  }
+
+  const credentials = JSON.parse(integration.credentials);
+
+  if (!credentials.refresh_token) {
+    integration.status = 'expired';
+    await integration.save();
+
+    const error = new Error('Google account needs to be connected again.');
+    error.code = 'REAUTH_GOOGLE_ACCOUNT';
+    error.status = 401;
+    throw error;
+  }
+
+  const accessExpired = !credentials.expiry_date || Date.now() >= credentials.expiry_date;
+
+  if (!accessExpired && credentials.access_token) {
+    return { access_token: credentials.access_token };
   }
 
   const oauthClient = getGoogleOAuthClient();
+
+  delete credentials.expiry_date;
   oauthClient.setCredentials(credentials);
 
-  return google.drive({ version: 'v3', auth: oauthClient });
+  try {
+    const { credentials: refreshedCredentials } = await oauthClient.refreshAccessToken();
 
+    if (!refreshedCredentials.access_token) throw new Error('Google did not return an access token.');
+
+    integration.credentials = JSON.stringify({
+      access_token: refreshedCredentials.access_token,
+      refresh_token: refreshedCredentials.refresh_token || credentials.refresh_token,
+      expiry_date: refreshedCredentials.expiry_date
+    });
+
+    const { access_token, expiry_date, refresh_token, ...metadata } = refreshedCredentials;//splitando os dados para pegar todos MENOS access_token/expiry_date/refresh_token...
+    integration.metadata = metadata;
+
+    integration.status = 'active';
+    await integration.save();
+
+    console.log(refreshedCredentials)
+
+    return { access_token: refreshedCredentials.access_token };
+
+  } catch (err) {
+
+    const invalidGrant = err?.response?.data?.error === 'invalid_grant' || err?.message === 'invalid_grant';
+    if (!invalidGrant) throw err;
+
+    integration.status = 'expired';
+    await integration.save();
+
+    const error = new Error('Google account needs to be connected again.');
+    error.code = 'REAUTH_GOOGLE_ACCOUNT';
+    error.status = 401;
+    throw error;
+  }
 }

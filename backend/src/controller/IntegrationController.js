@@ -1,4 +1,5 @@
 import { Integration } from '../model/integration.js';
+import { refreshGoogleCredentials } from '../connection/google.js';
 
 class Controller {
 
@@ -27,11 +28,14 @@ class Controller {
 
         if (!integration) return null;
 
-        const credentials = typeof integration.credentials === 'string' ? JSON.parse(integration.credentials) : integration.credentials;
-
         switch (integration.provider) {
-            case 'google':
-                return {access: credentials?.access_token ?? null};
+            case 'google': {
+                // resolve o refresh (renova o access token ou lança REAUTH_GOOGLE_ACCOUNT)
+                const { access_token } = await refreshGoogleCredentials(integration);
+
+                return { access: access_token };
+            }
+
             default:
                throw new Error("Necessário declarar o provider", {status: 400});
                

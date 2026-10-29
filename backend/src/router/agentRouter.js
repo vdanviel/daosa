@@ -1,7 +1,9 @@
 import express from "express";
 import { query, body, param, validationResult } from "express-validator";
 import { AgentController } from '../controller/AgentController.js';
+import { KnowledgeController } from '../controller/KnowledgeSourceController.js';
 import { isAuth } from "../middleware/auth.js";
+import { uploadKnowledge } from "../middleware/upload.js";
 
 const agentRouter = express.Router();
 
@@ -89,6 +91,28 @@ agentRouter.get('/conversation/:id/all',
 			const { page, size } = req.query;
 			const result = await AgentController.getAllConversations(req.params.id, page, size);
 			res.status(200).json(result);
+		} catch (err) { next(err); }
+	}
+);
+
+//files live here only until the RAG worker indexes them.
+agentRouter.post('/:id/knowledge/upload',
+	[
+		param('id').isInt().withMessage('Agent id must be an integer.')
+	],
+	isAuth,
+	// Checked before multer runs, so an invalid id never writes a file to disk.
+	(req, res, next) => {
+		const validation = validationResult(req);
+		if (!validation.isEmpty()) return res.status(400).send({ missing: validation.array() });
+		next();
+	},
+	uploadKnowledge.array('files', 10),
+	async (req, res, next) => {
+		try {
+
+			const result = await KnowledgeController.upload(req.params.id, req.auth.data.sub, req.files);
+			res.status(201).json(result);
 		} catch (err) { next(err); }
 	}
 );

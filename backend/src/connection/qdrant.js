@@ -13,10 +13,10 @@ export const qdrant = new QdrantClient(qdrantConfig);
 
 /** Cria a coleção se não existir. Chamar antes do primeiro upsert. */
 export async function ensureQdrantCollections() {
-  const exists = await qdrant.collectionExists(Env.getQdrantCollection());
+  const { exists } = await qdrant.collectionExists(Env.getQdrantCollection());
   if (!exists) {
     await qdrant.createCollection(Env.getQdrantCollection(), {
-      vectors: { size: Number(Env.getQdrantDimensions()), distance: 'Cosine' }
+      vectors: { size: Number(Env.getEmbeddingLlmDimensions()), distance: 'Cosine' }
     });
   }
 }

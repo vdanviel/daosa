@@ -14,15 +14,20 @@ async function proxy(request: Request, method: string) {
   const { pathname, search } = new URL(request.url);
   const target = `${BACKEND_URL}${pathname.replace(/^\/api/, '')}${search}`;
 
-  const headers = new Headers({ 'Content-Type': 'application/json' });
+  const headers = new Headers();
   const auth = request.headers.get('authorization');
   if (auth) headers.set('Authorization', auth);
+  // Preserva o content-type original (multipart/form-data com boundary no upload).
+  const contentType = request.headers.get('content-type');
+  if (contentType) headers.set('Content-Type', contentType);
 
   const init: RequestInit = { method, headers, cache: 'no-store' };
   // Body só quando existe: enviar `''` em DELETE/GET quebra o undici
   // (UND_ERR_REQ_CONTENT_LENGTH_MISMATCH) e o proxy devolvia 502.
-  const body = method !== 'GET' && method !== 'HEAD' ? await request.text() : '';
-  if (body) init.body = body;
+  if (method !== 'GET' && method !== 'HEAD') {
+    const buf = await request.arrayBuffer();
+    if (buf.byteLength > 0) init.body = buf;
+  }
 
   try {
     const res = await fetch(target, init);

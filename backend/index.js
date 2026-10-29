@@ -10,7 +10,7 @@ import { initializeDefaultRole } from './src/model/access/role.js';
 import { initializeDefaultChannel } from './src/model/channel.js';
 import { version1Router } from './src/router/version/version1Router.js';
 import Env from './src/util/Env.js';
-import { initWorkers } from './src/jobs/worker.js';
+import { initFixedWorkers } from './src/jobs/worker.js';
 import { ensureQdrantCollections } from './src/connection/qdrant.js';
 
 Env.validate();
@@ -57,20 +57,25 @@ app.get('/', (req, res) => {
   return res.send("API CORENODEJS API");
 });
 
+initFixedWorkers();
+
 // O tratador de erros deve ser registrado depois das rotas.
 app.use(errorHandler);
 
 // Prepara as dependências antes de começar a aceitar requisições.
 async function start() {
   try {
+    
     await connectDatabase();
     await initializeDefaultRole();
     await initializeDefaultChannel();
     await ensureQdrantCollections();
-    initWorkers();
+    initFixedWorkers()
+
     app.listen(port, () => {
       console.log(`API is running on ${port} port!`);
     });
+
   } catch (error) {
     console.error('API startup failed:', error);
     process.exitCode = 1;

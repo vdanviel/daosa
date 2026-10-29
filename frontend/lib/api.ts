@@ -50,6 +50,8 @@ export interface DashboardStats {
 export class ApiError extends Error {
   status: number;
   body: any;
+  /** Código de negócio do backend (ex.: `REAUTH_GOOGLE_ACCOUNT`). */
+  code?: string;
 
   constructor(status: number, body: any) {
     super(
@@ -64,7 +66,17 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.status = status;
     this.body = body;
+    this.code = body?.code;
   }
+}
+
+/**
+ * Verdadeiro quando o backend recusou porque a integração Google expirou
+ * (refresh token venceu ou foi revogado). O caminho é sempre o mesmo: mandar o
+ * usuário para `POST /google/consent-screen`, que atualiza o integration existente.
+ */
+export function needsGoogleReauth(err: unknown): boolean {
+  return err instanceof ApiError && err.code === 'REAUTH_GOOGLE_ACCOUNT';
 }
 
 async function request<T = any>(
@@ -87,13 +99,15 @@ async function request<T = any>(
       ? null
       : localStorage.getItem('auth_token');
 
+  const isFormData = opts.body instanceof FormData;
   const res = await fetch(url, {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      // FormData: o próprio fetch do browser monta o multipart boundary.
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token && { Authorization: `Bearer ${token}` }),
     },
-    ...(opts.body !== undefined && { body: JSON.stringify(opts.body) }),
+    ...(opts.body !== undefined && { body: isFormData ? opts.body : JSON.stringify(opts.body) }),
   });
 
   if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
@@ -164,19 +178,41 @@ export interface IntegrationCredential {
   access: string | null;
 }
 
+/** Linha de `GET /integration/user/:id/all` (sem credenciais/metadados). */
+export interface IntegrationRecord {
+  id: number;
+  user_id: string;
+  provider: string;
+  label: string | null;
+  auth_type: string;
+  /** `active` | `processing` | `revoked` | `expired` | `error` */
+  status: string;
+  [key: string]: any;
+}
+
 class IntegrationApi {
-  /** Credencial do usuário para um provider (google → `{ access }` ou `null`). */
+  /** Integrações do usuário (sem segredos). */
+  all = (userId: string) => get<IntegrationRecord[]>(`/integration/user/${userId}/all`);
+
+  /** Credencial do usuário para um provider (google → `{ access }` ou `null`).
+   *
+   * Pode lançar `ApiError` com `code === 'REAUTH_GOOGLE_ACCOUNT'` quando a
+   * integração expirou — nesse caso o fluxo é refazer o consentimento. */
   credentials = (userId: string, provider: string) =>
     get<IntegrationCredential | null>(`/integration/user/credentials/${userId}`, {
       query: { provider },
     });
+
+  /** Integração de um provider específico (`null` quando não existe). */
+  byProvider = (userId: string, provider: string) =>
+    get<IntegrationRecord | null>(`/integration/user/${userId}`, { query: { provider } });
 }
 
 /* -------------------------------- GOOGLE ---------------------------------- */
 
 class GoogleApi {
-  /** Gera o link do consentimento OAuth; devolve `{ consent_g_link }`. */
-  consentScreen = (body: any) => post<{ consent_g_link: string }>('/google/consent-screen', body);
+  /** Gera o link do consentimento OAuth; devolve `{ g_consent_link }`. */
+  consentScreen = (body: any) => post<{ g_consent_link: string }>('/google/consent-screen', body);
 }
 
 /* ------------------------------- AGENT ------------------------------------ */
@@ -192,6 +228,27 @@ class AgentApi {
   update = (id: number, body: any) => put(`/agent/update/${id}`, body);
   toggleStatus = (id: number, status: string) => patch(`/agent/toggle-status/${id}`, { status });
   remove = (id: number) => del(`/agent/delete/${id}`);
+  /**
+   * Envia arquivos locais para indexação RAG — `POST /agent/{id}/knowledge/upload`
+   * (multipart, field `files`). Cada arquivo vira uma `knowledge_source` (`pending`)
+   * e entra na fila do worker de embeddings.
+   */
+  uploadKnowledge = (id: number, files: File[]) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('files', file));
+    return post(`/agent/${id}/knowledge/upload`, formData);
+  };
+}
+
+/* ------------------------------- SOURCE ----------------------------------- */
+
+class SourceApi {
+  /** Fontes/knowledge sources de um agente — `GET /source/agent/{id}/knowledge`. */
+  knowledge = (agentId: number) => get<any>(`/source/agent/${agentId}/knowledge`);
+  /** Detalhe de uma source (com chunks) — `GET /source/knowledge/{source_id}`. */
+  byId = (sourceId: number) => get<any>(`/source/knowledge/${sourceId}`);
+  limits = () => get<any>('/source/limits');
+  delete = (sourceId: number) => del<any>(`/source/knowledge/${sourceId}`);
 }
 
 /* ---------------------------- CONVERSATION -------------------------------- */
@@ -228,6 +285,7 @@ export class Api {
   message = new MessageApi();
   integration = new IntegrationApi();
   google = new GoogleApi();
+  source = new SourceApi();
 
   get baseURL() {
     return BASE_URL;

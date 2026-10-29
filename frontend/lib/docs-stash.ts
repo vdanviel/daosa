@@ -18,6 +18,10 @@ export interface AgentDocument {
   origin: 'drive' | 'upload';
   size?: number;
   file?: File;
+  /** Status da knowledge source no backend: pending | processing | processed | failed. */
+  status?: string;
+  /** ID da source no backend (`knowledge_source.id`) — docs locais ainda não têm. */
+  sourceId?: number;
 }
 
 function openDb(): Promise<IDBDatabase> {

@@ -75,6 +75,7 @@ CREATE TABLE knowledge_source (
     file_path     VARCHAR(1000) NULL,              
     file_mime     VARCHAR(100) NULL,
     file_size     BIGINT       NULL,
+    file_extension ENUM('docx','md','xlsx','csv','txt','pdf','png','jpg','jpeg','webp','mp4','mkv') NULL,
     url           VARCHAR(2000) NULL,
     status        ENUM('pending','processing','processed','failed') NULL DEFAULT 'pending',
     error_message TEXT         NULL,
@@ -116,7 +117,7 @@ CREATE TABLE integration (
     credentials_encrypted TEXT          NULL,       -- JSON SECRETO inteiro, AES-256-GCM
     config               JSON          NULL,       -- metadados NÃO-secretos, formato livre por provedor
     secret_expires_at    DATETIME      NULL,       -- validade do access_token
-    status               ENUM('active','revoked','error') NOT NULL DEFAULT 'active',
+    status               ENUM('active','revoked','expired','error') NOT NULL DEFAULT 'active',
     last_used_at         DATETIME      NULL,
     created_at           DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

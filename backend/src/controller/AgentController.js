@@ -1,7 +1,9 @@
 import { Agent } from '../model/agent.js';
 import { Message } from "../model/message.js";
 import { Conversation } from "../model/conversation.js";
-import { llmModelClient, llmInfo, preprocessCorpus } from "../connection/llm.js";
+import { llmModelClient, llmInfo, preprocessCorpus, llmEmbeddingModel } from "../connection/llm.js";
+import { qdrant } from '../connection/qdrant.js';
+import Env from '../util/Env.js';
 
 import { Op } from 'sequelize';
 
@@ -49,28 +51,54 @@ class Controller {
 			}
 		);
 		
+		//configura o objetivo e descrição para o agente...
 		const systemPrompt = [agent.objective, agent.description].filter(Boolean).join('\n\n');
 
 		const modelConfig = typeof agent.model_config === 'string' ? JSON.parse(agent.model_config) : (agent.model_config || {});
-		
+
 		const modelOptions = modelConfig.options || {};
 
-		const knowledge_chunks = null; // Fragmentos de RAG do Qdrant (null se não houver busca ativa)
+		//procura de chunk mais proximo para contexto com documentos...
+		let knowledge_chunks = null;
 
-		const { raw, content, tokens_used, tool_calls, latency_ms } = await llmModelClient.chat([
-			{ role: 'system', content: preprocessCorpus(systemPrompt) },
+		//embedar o prompt do usuario
+		const embed = await llmEmbeddingModel.embedText(user_text);
+
+		const qdrantSearch = await qdrant.query(Env.getQdrantCollection(), {
+			query: embed,
+			limit: 10,
+			with_payload: true,
+			with_vector: false,
+		});
+
+		console.log(qdrantSearch)
+
+		const chunks = (qdrantSearch?.points || []).map((p) => p?.payload?.text ).filter(Boolean);
+
+		if (chunks.length > 0) {
+			knowledge_chunks = chunks.map((c, i) => ({ index: i, text: c }));
+		}
+
+		const contextText = (knowledge_chunks || []).map((k) => k.text).join('');
+
+		const ragSystem = contextText ? contextText : '';
+
+		const chat = await llmModelClient.chat([
+			{ role: 'system', content: `SEU OBJETIVO E DESCRIÇÃO: (${preprocessCorpus(systemPrompt)}) CONTEXTO: (${ragSystem})` },
 			...history.map(m => ({ role: m.role, content: preprocessCorpus(m.content) })),
 			{ role: 'user', content: preprocessCorpus(user_text) }
 		], modelOptions);
 
+		console.log(chat);
+
 		await Message.create({ 
 			conversation_id: conversation.id,
 			role: 'assistant', 
-			content: content,
+			content: chat.content,
 			knowledge_chunks: knowledge_chunks,
-			tokens_used: tokens_used,
-			tool_calls: tool_calls,
-			latency_ms: latency_ms
+			tokens_used: chat.tokens_used,
+			tool_calls: chat.tool_calls,
+			latency_ms: chat.latency_ms
 		});
 
 		agent.status = 'active';
@@ -81,8 +109,8 @@ class Controller {
 
 		return { 
 			conversation_id: conversation.id, 
-			reply: content,
-			rawResponse: raw
+			reply: chat.content,
+			rawResponse: chat.raw
 		};
 
 	}

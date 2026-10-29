@@ -1,14 +1,12 @@
 import Env from "../../../util/Env.js";
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama";
-import { randomUUID } from 'node:crypto';
-import { qdrant, qdrantConfig } from '../../../connection/qdrant.js';
 export default class OllamaProvider {
 
   constructor(){
 
     this.ollamaEmbedding = new OllamaEmbeddings({
         model: Env.getEmbeddingLlmModel(),
-        dimensions: 1024,
+        dimensions: Env.getEmbeddingLlmDimensions(),
         baseUrl: Env.getEmbeddingLlmUrl()
     });
 
@@ -17,7 +15,7 @@ export default class OllamaProvider {
   async chat(messages, options = {}) {
     const startTime = Date.now();
 
-    this.ollamaLlm = new ChatOllama({
+    const ollamaLlm = new ChatOllama({
       baseUrl: Env.getLlmUrl(),
       model: Env.getLlmModel(),
       temperature: options?.temperature,
@@ -81,7 +79,6 @@ export default class OllamaProvider {
     return this.ollamaEmbedding.embedQuery(text);
 
   }
-
 
 
 }

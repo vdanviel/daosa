@@ -4,10 +4,10 @@ import { redisConfig } from "../connection/redis.js";
 
 const queue_names = {
     email: "email-queue",
-    rag: "rag-queue"
+    upload: "upload-user"
 }
 
 const emailQueue = new Queue(queue_names.email, { connection: redisConfig });
-const ragQueue = new Queue(queue_names.rag, { connection: redisConfig })
+const getUserQueue = (userId) => { return new Queue(`${queue_names.upload}-${userId}`, { connection: redisConfig }); };
 
-export { emailQueue, ragQueue, queue_names };
+export { emailQueue, getUserQueue, queue_names };
