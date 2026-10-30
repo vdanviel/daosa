@@ -3,3 +3,4 @@ docker_volumes/qdrant/*
 docker_volumes/ollama/*
 docker_volumes/redis/*
 docs
+compose.yml

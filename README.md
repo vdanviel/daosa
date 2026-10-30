@@ -19,6 +19,61 @@ Os agentes podem ser utilizados por diferentes canais de comunicação, como pai
 
 As tabelas do banco modelam essas capacidades; a API existente já oferece rotas de usuários e agentes, além de consultas de conversas e mensagens. A cobertura dos demais fluxos pode ser implementada progressivamente.
 
+## Como iniciar projeto
+
+Primeiro faça uma cópia de `compose.local.yml` com o nome padrão `compose.yml`.
+
+Depois faça uma cópia dos arquivos `.env.local.sample` com o nome padrão `.env` em `/frontend` e `/backend`. Após isso preencha todos os dados dos arquivos de ambiente.
+ 
+Para iniciar o docker compose use:
+```bash
+docker compose --env-file backend/.env up -d --build
+```
+
+Depois de iniciar o projeto crie o banco de dados ´daosa´ no banco de dados relacional escolhido e a collection no Qdrant.
+
+Crie o banco de dados relacional:
+```sql
+docker exec db-sql-daosa mysql -u root -proot -e "CREATE DATABASE daosa;"
+```
+
+Crie a collection no Qdrant:
+```bash
+curl -X PUT 'http://localhost:6333/collections/daosa' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "vectors": {
+      "": {
+        "size": 768,
+        "distance": "Cosine",
+        "on_disk": false,
+        "hnsw_config": {
+          "m": 24,
+          "payload_m": 24,
+          "ef_construct": 256
+        },
+        "datatype": "float32"
+      }
+    }
+  }'
+```
+> `size` tem que estar de acordo com a config do seu modelo de embedding.
+> Após a criação só é possível mudar apagando a collection do Qdrant e criando novamente.
+
+Se você usar modelos do Ollama como LLM no projeto, instale eles antes, os modelos padrão que usamos no local são o `qwen2.5:3b` para LLM e `nomic-embed-text` para modelo de embeddings.
+
+Para instalar ele no conteiner do seu Ollama:
+```bash
+docker exec llm-daosa sh -c "ollama pull nomic-embed-text && ollama pull qwen2.5:3b"
+```
+
+Depois use o comando:
+```bash
+docker compose down && docker compose --env-file backend/.env up --build
+```
+Para alinhar todos os conteiners. 
+> **Toda vez que você precisar rodar suas alterações no projeto você precisa rodar esse comando.**
+
 ## Arquitetura
 
 * **Frontend:** Next.js — painel administrativo para configurar agentes, fontes de conhecimento e integrações da conta.

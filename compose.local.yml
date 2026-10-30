@@ -1,0 +1,102 @@
+services:
+
+  frontend-daosa:
+    container_name: frontend-daosa
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    env_file:
+      - "frontend/.env"
+    networks:
+     - daosa
+    
+  backend-daosa:
+    container_name: backend-daosa
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db-sql-daosa:
+        condition: service_healthy
+      db-cache-daosa:
+        condition: service_started
+      db-vector-daosa:
+        condition: service_started
+    ports:
+      - "3001:3000"
+    env_file:
+      - "backend/.env"
+    environment:
+      QDRANT_HOST: db-vector-daosa
+      QDRANT_PORT: 6333
+    networks:
+     - daosa
+
+  db-sql-daosa:
+    container_name: db-sql-daosa
+    image: mysql:latest
+    volumes:
+      - ./docker_volumes/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    ports:
+      - "3301:3306"
+    networks:
+     - daosa
+
+  db-vector-daosa:
+    container_name: db-vector-daosa
+    image: qdrant/qdrant
+    volumes:
+      - ./docker_volumes/qdrant:/qdrant/storage
+    ports:
+      - "6333:6333"
+    networks:
+     - daosa
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+
+  db-cache-daosa:
+    container_name: db-cache-daosa
+    image: redis:latest
+    volumes:
+      - ./docker_volumes/redis:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - daosa
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD}
+
+  llm-daosa:
+    container_name: llm-daosa
+    image: ollama/ollama
+    volumes:
+      - ./docker_volumes/ollama:/root/.ollama
+    ports:
+      - "11435:11434"
+    networks:
+      - daosa
+    
+networks:
+  daosa:
+    driver: bridge
+
+volumes:
+  db-sql-daosa:
+    external: true
+  db-vector-daosa:
+    external: true
