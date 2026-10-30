@@ -105,7 +105,7 @@ Para alinhar todos os conteiners.
 ## Segurança e isolamento
 
 * Cada usuário acessa somente seus próprios dados e agentes, conforme o isolamento por `user_id` previsto no schema.
-* A API valida autenticação e permissões em todas as operações protegidas.
+* A API valida autenticação em todas as operações protegidas.
 * Credenciais de providers e integrações ficam em armazenamento seguro na infraestrutura, nunca expostas ao frontend.
 * Servidores MCP exigem autorização explícita e permissões limitadas.
 * O acesso a ferramentas e ações externas é controlado por agente e pelas permissões registradas.
@@ -121,87 +121,22 @@ Para alinhar todos os conteiners.
 
 **Princípio central:** o DAOSA gerencia quem são os agentes, o que eles conhecem, quais recursos podem acessar e por onde se comunicam, enquanto a infraestrutura executa a inteligência artificial.
 
-## Visão da arquitetura e banco de dados
+# Diagrama de Arquitetura
 
-### Arquitetura do sistema
+```mermaid
+flowchart TB
+    subgraph User
+        U[Usuário / Navegador]
+    end
 
-O DAOSA utiliza uma arquitetura modular, com uma API central responsável por conectar o painel, os agentes, o conhecimento e os canais externos.
+    subgraph DockerCompose["Ambiente (AWS Cloud)"]
+        F[Frontend — Next.js]<-->|HTTP/API|B[Backend — API REST]
+        B-->|SQL|DB[(MySQL — daosa)]
+        B-->|Vetorial / Embeddings|Q[(Qdrant — collection daosa)]
+        B-->|OAuth / Picker|G[Google Drive / OAuth]
+    end
 
-```text
-              ┌─────────────────────┐
-              │   Frontend Next.js  │
-              │   Painel do DAOSA   │
-              └──────────┬──────────┘
-                         │ HTTP / REST
-              ┌──────────▼──────────┐
-              │ Node.js / Express  │
-              │ API REST           │
-              │ Autenticação       │
-              └──────────┬──────────┘
-                         │
-          ┌──────────────┼──────────────┐
-          │              │              │
-┌─────────▼─────┐ ┌──────▼───────┐ ┌────▼──────────┐
-│ MySQL         │ │ Agent Engine │ │ Channel       │
-│ Dados e       │ │ Execução e   │ │ Adapters      │
-│ configurações │ │ orquestração │ │ WhatsApp etc. │
-└───────────────┘ └──────┬───────┘ └───────────────┘
-                         │
-               ┌─────────┴──────────┐
-               │                    │
-       ┌───────▼────────┐  ┌────────▼────────┐
-       │ Knowledge/RAG  │  │ MCP Connectors  │
-       │ Documentos     │  │ Ferramentas e   │
-       │ Busca contextual│ │ sistemas externos│
-       └────────────────┘  └─────────────────┘
-                         │
-                ┌────────▼────────┐
-                │ Model Providers │
-                │ IA configurada │
-                │ na infraestrutura│
-                └─────────────────┘
+    U -->|Acesso web / WhatsApp / Telegram| F
+    F --> B
+    G -->|Tokens / Arquivos| B
 ```
-
-O **Agent Engine** coordena a execução dos agentes, consultando o RAG ou ferramentas MCP quando necessário. O MySQL armazena os dados transacionais; os documentos e índices vetoriais podem utilizar armazenamento especializado.
-
-### Modelo de banco de dados
-
-O schema atual (`db.sql`) usa nomes de tabelas no singular e relaciona os recursos diretamente ao usuário por meio de `user_id`. Não há tabelas `organization` ou `organization_member`: o isolamento representado no banco é por usuário/conta.
-
-**Tabelas principais:**
-
-| Tabela | Responsabilidade |
-| --- | --- |
-| `user` | Conta, credenciais, estado e dados básicos do usuário. |
-| `agent` | Agente, objetivo, estado e configuração do modelo. |
-| `instruction` | Instruções versionadas e ordenadas por prioridade para um agente. |
-| `knowledge_source` | Arquivos, URLs ou textos e estado de processamento. |
-| `knowledge_chunk` | Trechos de conhecimento e referência opcional ao ponto no Qdrant. |
-| `integration` | Integrações MCP/API, endpoint, tipo de autenticação e configuração. |
-| `tool` | Ferramentas do agente, schema de entrada e integração opcional. |
-| `permission` | Regra de permissão (`allow`/`deny`) para ferramenta, integração, canal ou conhecimento. |
-| `channel` | Tipo, configuração e estado do canal associado ao agente. |
-| `conversation` | Conversa do agente, usuário e canal opcional, incluindo dados do usuário externo. |
-| `message` | Conteúdo e metadados de cada mensagem da conversa. |
-| `api_key` | Hash e prefixo da chave, escopos, limites, validade e estado. |
-
-### Relacionamentos
-
-* `user` possui vários `agent`, `instruction`, `knowledge_source`, `knowledge_chunk`, `integration`, `tool`, `permission`, `channel`, `conversation`, `message` e `api_key` por meio de `user_id`.
-* `agent` possui várias instruções, fontes de conhecimento, trechos, integrações, ferramentas, permissões, canais, conversas e mensagens.
-* `knowledge_source` pode possuir vários `knowledge_chunk`; cada trecho também referencia diretamente seu agente e usuário.
-* `integration` pode ser referenciada por várias ferramentas. Ao excluir a integração, `tool.integration_id` fica nulo.
-* `channel` pode estar associado a várias conversas. Ao excluir o canal, `conversation.channel_id` fica nulo.
-* `conversation` possui várias mensagens; ao excluir conversa, agente ou usuário, as dependências relacionadas são removidas conforme as regras `ON DELETE CASCADE` do schema.
-
-Não existe uma tabela associativa `agent_channels`: `channel` contém `agent_id` diretamente. As credenciais de integração também estão representadas atualmente pelo campo `credentials_encrypted` de `integration`, não por uma tabela separada.
-
-> **Atenção ao schema:** `user` declara o índice único `uq_user_slug`, mas a coluna `slug` não está definida na tabela. Esse ponto precisa ser corrigido no `db.sql` para que a criação do schema funcione.
-
-### Estratégia de armazenamento
-
-* **MySQL:** entidades, configurações, permissões, conversas e metadados descritos neste schema.
-* **Qdrant:** armazenamento vetorial referenciado por `knowledge_chunk.qdrant_point_id`.
-* **Object Storage, Secret Manager e fila de tarefas:** componentes previstos para armazenar arquivos, proteger segredos e processar documentos de forma assíncrona; não são tabelas deste schema.
-
-A infraestrutura de IA, o armazenamento vetorial e a fila podem ser implementados separadamente da API principal, mantendo o núcleo do DAOSA simples e preparado para expansão.
