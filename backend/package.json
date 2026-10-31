@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon ./index.js",
-    "test": "echo 'testing'",
+    "test": "node --test",
     "corenode": "node ./corenode.js"
   },
   "repository": {

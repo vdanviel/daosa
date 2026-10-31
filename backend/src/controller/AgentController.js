@@ -1,7 +1,8 @@
 import { Agent } from '../model/agent.js';
 import { Message } from "../model/message.js";
 import { Conversation } from "../model/conversation.js";
-import { llmModelClient, llmInfo, preprocessCorpus, llmEmbeddingModel } from "../connection/llm.js";
+import { llmModelClient, llmInfo, llmEmbeddingModel } from "../connection/llm.js";
+import { buildChatMessages } from '../service/llm/chatMessages.js';
 import { qdrant } from '../connection/qdrant.js';
 import Env from '../util/Env.js';
 
@@ -51,9 +52,6 @@ class Controller {
 			}
 		);
 		
-		//configura o objetivo e descrição para o agente...
-		const systemPrompt = [agent.objective, agent.description].filter(Boolean).join('\n\n');
-
 		const modelConfig = typeof agent.model_config === 'string' ? JSON.parse(agent.model_config) : (agent.model_config || {});
 
 		const modelOptions = modelConfig.options || {};
@@ -79,15 +77,9 @@ class Controller {
 			knowledge_chunks = chunks.map((c, i) => ({ index: i, text: c }));
 		}
 
-		const contextText = (knowledge_chunks || []).map((k) => k.text).join('');
+		const contextText = (knowledge_chunks || []).map((k) => k.text).join('\n');
 
-		const ragSystem = contextText ? contextText : '';
-
-		const chat = await llmModelClient.chat([
-			{ role: 'system', content: `SEU OBJETIVO E DESCRIÇÃO: (${preprocessCorpus(systemPrompt)}) CONTEXTO: (${ragSystem})` },
-			...history.map(m => ({ role: m.role, content: preprocessCorpus(m.content) })),
-			{ role: 'user', content: preprocessCorpus(user_text) }
-		], modelOptions);
+		const chat = await llmModelClient.chat(buildChatMessages(agent, history, contextText, user_text), modelOptions);
 
 		console.log(chat);
 
