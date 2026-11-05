@@ -74,6 +74,14 @@ docker compose down && docker compose --env-file backend/.env up --build
 Para alinhar todos os conteiners. 
 > **Toda vez que você precisar rodar suas alterações no projeto você precisa rodar esse comando.**
 
+### Serviços disponíveis:
+
+**Front-end**:http://localhost:3002
+
+**Back-end**:http://localhost:3001
+
+**Swagger-API**:http://localhost:3001/api-docs
+
 ## Fluxo de desenvolvimento
 
 Para contribuir com o projeto:
