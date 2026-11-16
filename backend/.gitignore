@@ -3,3 +3,6 @@ node_modules
 .env
 database.sqlite
 .git
+.env.test
+test/e2e/.output/report/*
+test/e2e/.output/result/*
