@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon ./index.js",
-    "test": "echo 'testing'",
-    "corenode": "node ./corenode.js"
+    "test": "vitest run",
+    "corenode": "node ./corenode.js",
+    "test:browser": "vitest"
   },
   "repository": {
     "type": "git",
@@ -40,7 +41,10 @@
     "mysql2": "^3.14.4",
     "nodemailer": "^7.0.3",
     "pdf-lib": "^1.17.1",
+    "@playwright/test": "^1.65.0",
+    "playwright": "^1.65.0",
     "sequelize": "^6.37.7",
+    "supertest": "^7.3.1",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1",
     "unpdf": "^1.9.1",
@@ -48,6 +52,8 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@vitest/browser-playwright": "^5.1.0",
+    "nodemon": "^3.1.10",
+    "vitest": "^5.1.0"
   }
 }

@@ -2,10 +2,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+if (process.env.TEST_MODE === '1') {
+  dotenv.config({ path: '.env.test', override: true });
+}
+
 class Env {
 
   static getAppName() { return process.env.APP_NAME || 'Company'; }
   static getCurrentEnvironment() { return process.env.CURRENT_ENVIRONMENT || 'dev'; }
+  static isTestMode() { return process.env.TEST_MODE === '1'; }
   static getDbName() { return process.env.DB_NAME || ''; }
   static getDbUser() { return process.env.DB_USER || ''; }
   static getDbPassword() { return process.env.DB_PASSWORD || ''; }
@@ -22,6 +27,7 @@ class Env {
   static getPort() { return Number(process.env.PORT || 3000); }
   static getSessionSecretPass() { return process.env.SESSION_SECRET_PASS; }
   static getSpaApplicationUrl() { return process.env.SPA_APPLICATION_URL; }
+  static getBackendApplicationUrl() { return process.env.BACKEND_APPLICATION_URL; }
   static getLlmProvider() { return process.env.LLM_PROVIDER; }
   static getLlmUrl() { return process.env.LLM_BASE_URL; }
   static getLlmModel() { return process.env.LLM_MODEL; }
