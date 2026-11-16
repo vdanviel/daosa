@@ -57,8 +57,6 @@ app.get('/', (req, res) => {
   return res.send("API CORENODEJS API");
 });
 
-initFixedWorkers();
-
 // O tratador de erros deve ser registrado depois das rotas.
 app.use(errorHandler);
 
