@@ -1,4 +1,4 @@
-import { DataTypes, Sequelize } from 'sequelize';
+import { Sequelize } from 'sequelize';
 import Env from '../util/Env.js';
 
 const sequelize = new Sequelize(
@@ -17,15 +17,8 @@ const sequelize = new Sequelize(
 async function connectDatabase() {
   await sequelize.authenticate();
   await sequelize.sync();
-  const queryInterface = sequelize.getQueryInterface();
-  const channelColumns = await queryInterface.describeTable('channel');
-  if (!channelColumns.icon_url) {
-    await queryInterface.addColumn('channel', 'icon_url', {
-      type: DataTypes.STRING(2000),
-      allowNull: true
-    });
-  }
-  console.log('Successfully connected to database.');
+
+  console.log(`Successfully connected to database (${sequelize.config.database}@${sequelize.config.host}:${sequelize.config.port})`);
 }
 
 export { sequelize, connectDatabase };
