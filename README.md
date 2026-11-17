@@ -82,9 +82,7 @@ Para alinhar todos os conteiners.
 
 **Swagger-API**:http://localhost:3001/api-docs
 
-## Fluxo de desenvolvimento
-
-Para contribuir com o projeto:
+## Padrão de versionamento
 
 1. Crie uma branch a partir de `main`: `username:feature/nome-da-feature` (ou `fix/`, `docs/`, `refactor/`, etc...)
 2. Faça commits seguindo o padrão Angular:
@@ -99,8 +97,6 @@ Para contribuir com o projeto:
 4. Aguarde revisão, aprovação e merge
 
 Exemplo de mensagem: `feat: adicionar endpoint para listar agentes`
-
-> **Sobre `chore:`:** usado quando o commit não altera código de negócio — apenas manutenção, build, dependências (`package.json`), configuração de ambiente ou limpeza de arquivos. Ele não aparece nas notas de release porque não gera impacto direto ao usuário final.
 
 ## Arquitetura
 

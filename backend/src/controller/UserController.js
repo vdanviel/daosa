@@ -14,7 +14,7 @@ import Env from '../util/Env.js';
 import { emailQueue } from '../jobs/queue.js';
 
 const withoutPassword = (user) => {
-    const { password_hash, ...safeUser } = user.get({ plain: true });
+    const { password, ...safeUser } = user.get({ plain: true });
     return safeUser;
 };
 
@@ -41,7 +41,7 @@ class Controller {
         } : {};
         const { rows, count: total } = await User.findAndCountAll({
             where,
-            attributes: { exclude: ['password_hash'] },
+            attributes: { exclude: ['password'] },
             offset: (page - 1) * size,
             limit: size
         });
@@ -150,7 +150,7 @@ class Controller {
             name,
             email,
             document,
-            password_hash: passwordHash,
+            password: passwordHash,
             status: 'active'
         });
 
@@ -161,7 +161,7 @@ class Controller {
 
     async login(email, password, ip, userAgent) {
         const user = await User.findOne({ where: { email } });
-        if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+        if (!user || !bcrypt.compareSync(password, user.password)) {
             const err = new Error('Email ou senha inválidos.');
             err.status = 401;
             throw err;
@@ -270,13 +270,13 @@ class Controller {
             err.status = 404;
             throw err;
         }
-        if (!bcrypt.compareSync(oldPassword, user.password_hash)) {
+        if (!bcrypt.compareSync(oldPassword, user.password)) {
             const err = new Error('A senha antiga é inválida.');
             err.status = 401;
             throw err;
         }
 
-        await user.update({ password_hash: bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10)) });
+        await user.update({ password: bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10)) });
         await PersonalAccessTokenController.deleteAllRelated(user.id);
         return { message: 'Senha alterada com sucesso.' };
     }

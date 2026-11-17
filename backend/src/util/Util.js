@@ -78,24 +78,6 @@ class Utils {
 
   }
 
-  static getSessionSecret(){
-
-    return Env.getSessionSecretPass();
-
-  }
-
-  static getSpaUrl(){
-
-    return Env.getSpaApplicationUrl();
-
-  }
-
-  static getPort(){
-
-    return Env.getPort();
-
-  }
-
 }
 
 export default Utils;

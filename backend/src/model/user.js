@@ -10,7 +10,7 @@ const User = sequelize.define('User', {
     name: { type: DataTypes.STRING(255), allowNull: true },
     email: { type: DataTypes.STRING(255), allowNull: true, unique: true },
     document: { type: DataTypes.STRING(255), allowNull: true },
-    password_hash: { type: DataTypes.STRING(255), allowNull: true },
+    password: { type: DataTypes.STRING(255), allowNull: true },
     status: {
       type: DataTypes.ENUM('active', 'suspended', 'invited', 'disabled'),
       allowNull: true,
