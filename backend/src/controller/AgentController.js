@@ -69,6 +69,14 @@ class Controller {
 			limit: 10,
 			with_payload: true,
 			with_vector: false,
+			filter:{
+				must:{
+					key: 'agent_id',
+					match: {
+						value: agent.id
+					}
+				}
+			}
 		});
 
 		console.log(qdrantSearch)
