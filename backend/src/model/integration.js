@@ -41,7 +41,6 @@ Integration.belongsTo(User, {
   foreignKey: 'user_id',
   as: 'user',
   onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
 });
 
 Integration.belongsTo(Channel, {
