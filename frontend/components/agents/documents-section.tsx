@@ -19,22 +19,6 @@ import { stashDocs, takeStashedDocs, type AgentDocument } from '@/lib/docs-stash
 import { openDrivePicker } from '@/lib/google-picker';
 import { cn } from '@/lib/utils';
 
-/**
- * SEÇÃO "MULTIMÍDIA" DO FORMULÁRIO DE AGENTE
- * -----------------------------------------------------------------------------
- * Dois acessos: ícone do Google (Drive) e upload de arquivo comum.
- *
- * - Sem integração Google: o ícone fica apagado e o clique abre um modal
- *   explicando o que vai acontecer; o botão "Conectar ao Google" manda os dados
- *   já digitados no form para `POST /google/consent-screen` (o backend codifica
- *   esses campos no `state`, ver `googleRouter.js`) e navega para o
- *   consentimento. Os documentos locais são guardados em `stashDocs` para
- *   voltarem intactos quando o OAuth redirecionar de volta.
- * - Com integração: o ícone fica sólido e o clique abre o Google Picker com o
- *   access token de `GET /integration/user/credentials/{id}`.
- *
- * Por enquanto nada é enviado ao backend: os documentos só acumulam aqui.
- */
 export function DocumentsSection({
   form,
   returnPath,
@@ -43,9 +27,7 @@ export function DocumentsSection({
   sources,
   onDeleteSource,
 }: {
-  /** Formulário atual — usado para repor os dados na volta do consentimento. */
   form: AgentForm;
-  /** Para onde o backend deve devolver o usuário após o OAuth. */
   returnPath: string;
   onStagedChange?: Dispatch<SetStateAction<AgentDocument[]>>;
   uploadLimits?: { maxFiles?: number; maxFileSizeMB?: number; allowedTypes?: string[]; allowedExtensions?: string[] };
@@ -54,14 +36,16 @@ export function DocumentsSection({
 }) {
   const { user } = useAuth();
   const [docs, setDocs] = useState<AgentDocument[]>([]);
+
   useEffect(() => {
     onStagedChange?.(docs);
   }, [docs, onStagedChange]);
+
   const [googleReady, setGoogleReady] = useState<boolean | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** Modal explicativo exibido quando ainda não há integração com o Google. */
+
   const [connectOpen, setConnectOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sourceDetailOpen, setSourceDetailOpen] = useState(false);
@@ -74,7 +58,16 @@ export function DocumentsSection({
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /** Zona de drag ativa (feedback visual). */
+  const [isDragging, setIsDragging] = useState(false);
+  /**
+   * Profundidade do drag sobre a zona: dragenter/dragleave disparam ao entrar
+   * e sair de cada elemento filho, então só zera quando o ponteiro sai da zona.
+   */
+  const dragDepthRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -85,9 +78,13 @@ export function DocumentsSection({
     });
 
     if (user?.id) {
+
       api.integration
         .credentials('google')
         .then((res) => {
+
+          console.log(res)
+
           if (!active) return;
           setAccessToken(res?.access || null);
           setGoogleReady(Boolean(res?.access));
@@ -95,11 +92,13 @@ export function DocumentsSection({
         .catch(() => {
           if (active) setGoogleReady(false);
         });
+
     }
 
     return () => {
       active = false;
     };
+
   }, [user?.id]);
 
   const onGoogleClick = async () => {
@@ -168,9 +167,9 @@ export function DocumentsSection({
     }
   };
 
-  const onFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    e.target.value = ''; // permite escolher o mesmo arquivo de novo
+  /** Adiciona arquivos vindos do input ou do drag-and-drop. */
+  const addFiles = (files: File[]) => {
+    if (files.length === 0) return;
 
     setDocs((prev) =>
       mergeDocs(
@@ -186,12 +185,44 @@ export function DocumentsSection({
     );
   };
 
+  const onFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // permite escolher o mesmo arquivo de novo
+    addFiles(files);
+  };
+
+  // Drag-and-drop na zona de upload.
+  const onDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepthRef.current += 1;
+    setIsDragging(true);
+  };
+
+  // Sem preventDefault aqui o navegador navega para o arquivo em vez de
+  // entregar o drop na zona.
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepthRef.current = 0;
+    setIsDragging(false);
+    addFiles(Array.from(e.dataTransfer.files ?? []));
+  };
+
   return (
     <>
       <div className="rounded-2xl border border-border/60 bg-background shadow-sm p-5 space-y-5">
         {/* Cabeçalho da seção com hierarquia forte */}
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-bold tracking-tight text-foreground">Multimídia</h3>
+          <h3 className="text-sm font-bold tracking-tight text-foreground">Documentos</h3>
           {uploadLimits && (
             <p className="text-xs text-muted-foreground leading-relaxed">
               Máximo <strong className="text-foreground">{uploadLimits.maxFileSizeMB ?? 20} MB</strong> por arquivo · limite de <strong className="text-foreground">{uploadLimits.maxFiles ?? 10}</strong> arquivos
@@ -203,9 +234,16 @@ export function DocumentsSection({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
           className={cn(
-            'relative w-full rounded-xl border-2 border-dashed border-primary/20 bg-primary/[0.04] px-6 py-7 text-center transition-all hover:border-primary/40 hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            'group'
+            'relative w-full rounded-xl border-2 border-dashed px-6 py-7 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'group',
+            isDragging
+              ? 'border-primary bg-primary/[0.12] ring-2 ring-primary/30'
+              : 'border-primary/20 bg-primary/[0.04] hover:border-primary/40 hover:bg-primary/[0.08]'
           )}
           aria-label="Enviar arquivo"
         >
@@ -217,6 +255,7 @@ export function DocumentsSection({
 
           {/* Botões de ação integrados à zona */}
           <div className="mt-4 flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+
             <button
               type="button"
               onClick={onGoogleClick}
@@ -247,6 +286,7 @@ export function DocumentsSection({
               ref={fileInputRef}
               type="file"
               multiple
+              accept=".pdf,.txt,.md,.doc,.ppt,.csv,.json"
               className="hidden"
               onChange={onFilesSelected}
               aria-label="Selecionar arquivos"
@@ -260,14 +300,14 @@ export function DocumentsSection({
 
         {error && !connectOpen && <p className="text-xs text-destructive">{error}</p>}
 
-        <div className="mt-3">
+        <div className="mt-3 w-full max-h-[300px] overflow-y-auto">
           {/* Arquivos a enviar — sem título */}
           {docs.length === 0 ? (
             !error && (
               <p className="text-xs text-muted-foreground">Nenhum arquivo carregado até o momento.</p>
             )
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2 p-0 ml-0">
               {docs.map((doc) => (
                 <li
                   key={doc.id}
@@ -297,7 +337,7 @@ export function DocumentsSection({
           {sources && sources.length > 0 && (
             <div className="mt-4">
               <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Enviados</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-2 pl-0 ml-0">
                 {sources.map((s: any) => {
                   const rawStatus = String(s.status ?? '').toLowerCase();
                   const statusMap: Record<string, string> = {
@@ -341,86 +381,42 @@ export function DocumentsSection({
         </div>
       </div>
 
+      <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
+        <DialogContent className="z-[60] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GoogleIcon className="h-5 w-5" />
+              Conectar ao Google
+            </DialogTitle>
+            <DialogDescription>Sua conta Google ainda não está conectada.</DialogDescription>
+          </DialogHeader>
 
-      {/* Aviso prévio quando a conta Google ainda não está conectada.
-          z-[60] garante que o modal do Google fique acima do modal de edição. */}
-      {isMobile && connectOpen ? (
-        createPortal(
-          <div className="fixed inset-0 z-[60] bg-background md:hidden flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Conectar ao Google</h2>
-              <button
-                type="button"
-                onClick={() => setConnectOpen(false)}
-                className="h-8 w-8 rounded-md border p-0 hover:bg-muted"
-                aria-label="Fechar"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Sua conta Google ainda não está conectada.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Ao continuar, o Google abre a tela de consentimento pedindo acesso ao seu Drive. Depois de autorizar, você volta para este formulário com tudo o que já preencheu.
-              </p>
-              {error && (
-                <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {error}
-                </p>
-              )}
-              <div className="flex gap-2 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setConnectOpen(false)} disabled={busy} className="flex-1">
-                  Cancelar
-                </Button>
-                <Button type="button" onClick={onConfirmConnect} disabled={busy} className="flex-1">
-                  {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Conectar
-                </Button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )
-      ) : (
-        <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
-          <DialogContent className="z-[60] max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <GoogleIcon className="h-5 w-5" />
-                Conectar ao Google
-              </DialogTitle>
-              <DialogDescription>Sua conta Google ainda não está conectada.</DialogDescription>
-            </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Ao continuar, o Google abre a tela de consentimento pedindo acesso ao seu Drive. Depois de
+            autorizar, você volta para este formulário com tudo o que já preencheu.
+          </p>
 
-            <p className="text-sm text-muted-foreground">
-              Ao continuar, o Google abre a tela de consentimento pedindo acesso ao seu Drive. Depois de
-              autorizar, você volta para este formulário com tudo o que já preencheu.
+          {error && (
+            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
             </p>
+          )}
 
-            {error && (
-              <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setConnectOpen(false)} disabled={busy}>
-                Cancelar
-              </Button>
-              <Button type="button" onClick={onConfirmConnect} disabled={busy}>
-                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Conectar ao Google
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+          <DialogFooter className='flex flex-row flex-items gap-2 justify-end'>
+            <Button type="button" variant="outline" onClick={() => setConnectOpen(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={onConfirmConnect} disabled={busy}>
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Conectar ao Google
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de detalhes da source */}
       <Dialog open={sourceDetailOpen} onOpenChange={setSourceDetailOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Detalhes do arquivo</DialogTitle>
             <DialogDescription>
@@ -456,10 +452,18 @@ export function DocumentsSection({
                   setDeletingSource(false);
                 }
               }}
-              disabled={deletingSource}
+              disabled={
+                deletingSource ||
+                sourceDetail?.status === 'processing'
+              }
             >
-              {deletingSource ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Excluir
+              {deletingSource ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : sourceDetail?.status === 'processing' ? (
+                'Processando…'
+              ) : (
+                'Excluir'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
