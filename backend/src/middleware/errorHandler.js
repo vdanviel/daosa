@@ -24,8 +24,7 @@ export const errorHandler = (err, req, res, next) => {
     //logar em aws
     //filtro de logs de erro do sistema que não podem logar
     if(
-        !(err.name === 'Missing') ||
-        !(err.name === 'Validation')
+        err.name !== 'Unauthorized'
     ){
         putLogObject({ 
             Key: 
