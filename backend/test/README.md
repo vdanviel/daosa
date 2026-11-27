@@ -136,7 +136,7 @@ Monta o app Express usado pelos testes de feature e o exporta (`app`), **sem cha
 
 1. `connectDatabase()` → autentica e faz `sequelize.sync()` (cria/atualiza tabelas de `daosa-test`)
 2. `initializeDefaultRole()` → papéis padrão
-3. `initializeDefaultChannel()` → canal `own`
+3. `initializeChannels()` → canal `own`
 4. `ensureQdrantCollections()` → coleções do Qdrant
 5. `initFixedWorkers()` → workers BullMQ (exige Redis)
 
@@ -150,7 +150,6 @@ Hoje ele expõe:
 
 | O que exporta | O que faz |
 |---|---|
-| `TEST_PASSWORD` | `"password"` — senha plana usada nos testes |
 | `testUser()` | `findOrCreate` do usuário `test-user@daosa.test` com senha **hash bcrypt**; corrige linhas antigas salvas em texto puro (senão o login cai em 401) |
 | `validJWTUser()` | Assina um JWT `{ data: { sub: user.id }, scope: [] }` com `JWT_SECRET`, validade 168h |
 
@@ -217,7 +216,7 @@ Boas práticas:
 
 ```js
 import { test, expect } from '@playwright/test';
-import { testUser, TEST_PASSWORD } from '../helper/http.js';
+import { testUser } from '../helper/http.js';
 
 test.describe('Fluxo X', () => {
   test.beforeEach(async ({ page }) => {
@@ -228,7 +227,7 @@ test.describe('Fluxo X', () => {
     const user = await testUser();
 
     await page.getByLabel('E-mail').fill(user.email);
-    await page.getByLabel('Senha').fill(TEST_PASSWORD);
+    await page.getByLabel('Senha').fill("password");
 
     const [response] = await Promise.all([
       page.waitForResponse((res) => res.url().includes('/endpoint') && res.request().method() === 'POST'),

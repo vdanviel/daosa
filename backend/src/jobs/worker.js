@@ -12,7 +12,7 @@ import { chunkText, chunkSpreadsheet, createLlmEmbeddingProvider } from "../serv
 import { qdrant } from "../connection/qdrant.js";
 import Env from "../util/Env.js";
 
-//fixed workers
+//fixed workers (called in index.js)
 const initEmailWorker = () => {
 
     const worker = new Worker(
@@ -57,7 +57,7 @@ export function initFixedWorkers(){
     initEmailWorker();
 }
 
-//dynamic workers
+//dynamic workers (used in specif parts in code)
 export const initUploadProcessUserWorker = (userId) => {
     const queueName = `upload-user-${userId}`;
 
