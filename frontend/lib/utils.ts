@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import { Env } from './env';
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -78,6 +80,19 @@ export function isValidDocument(value: string) {
   }
 
   return false;
+}
+
+/**
+ * Resolve um caminho de asset (ex.: ícone de canal) que vem do backend como
+ * caminho relativo (`/public/images/x.png`) para uma URL absoluta do backend.
+ * Caminhos já absolutos ou nulos são devolvidos como estão.
+ */
+export function assetUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  const backend = Env.get('BACKEND_URL');
+  if (!backend) return path.startsWith('/') ? path : `/${path}`;
+  return `${backend.replace(/\/+$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
 export function maskPhone(value: string) {
