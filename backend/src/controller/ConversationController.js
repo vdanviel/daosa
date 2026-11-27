@@ -1,6 +1,7 @@
 import { Conversation } from '../model/conversation.js';
 import { Message } from '../model/message.js';
 import { Op } from 'sequelize';
+import { ApiError } from '../contracts/Error.js';
 
 class Controller {
 
@@ -59,9 +60,7 @@ class Controller {
 	async find(id) {
 		const record = await Conversation.findByPk(id);
 		if (!record) {
-			const error = new Error('Conversa não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Conversa não encontrado.');
 		}
 		return record;
 	}
@@ -107,9 +106,7 @@ class Controller {
 		const record = await this.find(id);
 
 		if (!['open', 'closed'].includes(status)) {
-			const error = new Error("Status must be 'open' or 'closed'.");
-			error.status = 400;
-			throw error;
+			throw ApiError.validation("Status must be 'open' or 'closed'.");
 		}
 
 		record.status = status;
@@ -128,9 +125,7 @@ class Controller {
 		const record = await Conversation.findByPk(id);
 
 		if (!record) {
-			const error = new Error('Conversa não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Conversa não encontrado.');
 		}
 
 		// A tabela `message` não possui FK com ON DELETE CASCADE (o schema veio
