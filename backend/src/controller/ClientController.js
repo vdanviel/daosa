@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
 import { Client } from '../model/client.js';
+import { ApiError } from '../contracts/Error.js';
 
 class Controller {
 
@@ -12,9 +13,7 @@ class Controller {
 		});
 
     if (existing__TittleModuleName__) {
-        const err = new Error('__TittleModuleName__ is already being used.');
-        err.status = 409;
-        throw err;
+        throw ApiError.validation('__TittleModuleName__ is already being used.', 409);
     }
 
 		return Client.create({
@@ -56,9 +55,7 @@ class Controller {
 	async find(id) {
 		const record = await Client.findByPk(id);
 		if (!record) {
-			const error = new Error('Client not found.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Client not found.');
 		}
 		return record;
 	}
@@ -80,9 +77,7 @@ class Controller {
 		const record = await Client.findOne(id);
 
 		if (!['draft', 'active', 'archived'].includes(status)) {
-			const error = new Error("Status must be 'draft', 'active' or 'archived'.");
-			error.status = 400;
-			throw error;
+			throw ApiError.validation("Status must be 'draft', 'active' or 'archived'.");
 		}
 
 		record.status = status;
