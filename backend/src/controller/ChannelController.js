@@ -1,4 +1,5 @@
 import { Channel } from '../model/channel.js';
+import { ApiError } from '../contracts/Error.js';
 
 class Controller {
 
@@ -9,9 +10,7 @@ class Controller {
     async find(id) {
 		const record = await Channel.findByPk(id);
 		if (!record) {
-			const error = new Error('Canal não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Canal não encontrado.');
 		}
 		return record;
 	}

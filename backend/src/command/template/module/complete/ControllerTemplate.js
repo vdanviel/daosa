@@ -1,20 +1,20 @@
 import { Op } from 'sequelize';
 import { __TitleModuleName__ } from '../model/__ModuleName__.js';
+import { ApiError } from '../../contracts/Error.js';
 
 class Controller {
 
 	async create(value1, value2, value3) {
 
-    const existing__TittleModuleName__ = await __TittleModuleName__.findAll({ 
-			where: {
-        value1: value1
-			} 
-		});
+    const existing__TittleModuleName__ = await __TittleModuleName__.findAll({
+		where: {
+        		value1: value1
+			}
+		}
+	);
 
     if (existing__TittleModuleName__) {
-        const err = new Error('__TittleModuleName__ is already being used.');
-        err.status = 409;
-        throw err;
+        throw ApiError.validation('__TittleModuleName__ is already being used.', 409);
     }
 
 		return __TitleModuleName__.create({
@@ -56,9 +56,7 @@ class Controller {
 	async find(id) {
 		const record = await __TitleModuleName__.findByPk(id);
 		if (!record) {
-			const error = new Error('__TitleModuleName__ not found.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('__TitleModuleName__ not found.');
 		}
 		return record;
 	}
@@ -80,9 +78,7 @@ class Controller {
 		const record = await __TitleModuleName__.findOne(id);
 
 		if (!['draft', 'active', 'archived'].includes(status)) {
-			const error = new Error("Status must be 'draft', 'active' or 'archived'.");
-			error.status = 400;
-			throw error;
+			throw ApiError.validation("Status must be 'draft', 'active' or 'archived'.");
 		}
 
 		record.status = status;

@@ -1,30 +1,25 @@
 import { Message } from '../model/message.js';
 import { Conversation } from '../model/conversation.js';
 import { Op } from 'sequelize';
+import { ApiError } from '../contracts/Error.js';
 
 class Controller {
 
 	async create(conversation_id, role = 'user', content) {
 
 		if (!content) {
-			const error = new Error('Conteúdo da mensagem é obrigatório.');
-			error.status = 400;
-			throw error;
+			throw ApiError.notFound('Conteúdo da mensagem é obrigatório.', 400);
 		}
 
 		const validRoles = ['user', 'assistant', 'system', 'tool'];
 		if (role && !validRoles.includes(role)) {
-			const error = new Error("Role inválido. Deve ser 'user', 'assistant', 'system' ou 'tool'.");
-			error.status = 400;
-			throw error;
+			throw ApiError.validation("Role inválido. Deve ser 'user', 'assistant', 'system' ou 'tool'.");
 		}
 
 		if (conversation_id) {
 			const conversation = await Conversation.findByPk(conversation_id);
 			if (!conversation) {
-				const error = new Error('Conversa não encontrada.');
-				error.status = 404;
-				throw error;
+				throw ApiError.notFound('Conversa não encontrada.');
 			}
 			await conversation.update({ last_message_at: new Date() });
 		}
@@ -74,9 +69,7 @@ class Controller {
 	async find(id) {
 		const record = await Message.findByPk(id);
 		if (!record) {
-			const error = new Error('Mensagem não encontrada.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Mensagem não encontrada.');
 		}
 		return record;
 	}

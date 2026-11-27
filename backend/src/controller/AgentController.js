@@ -6,6 +6,7 @@ import { qdrant } from '../connection/qdrant.js';
 import Env from '../util/Env.js';
 
 import { Op } from 'sequelize';
+import { ApiError } from '../contracts/Error.js';
 
 class Controller {
 
@@ -15,10 +16,10 @@ class Controller {
 			where: { id: agent_id }
 		});
 
-		if (!agent) throw Object.assign(new Error('Agente não encontrado.'), { status: 404 });
+		if (!agent) throw ApiError.notFound('Agente não encontrado.');
 
 		// Agente arquivado não atende: mesmo formato de erro dos demais, mas 503.
-		if (agent.status === 'archived') throw Object.assign(new Error('Serviço atualmente desativado.'), { status: 503 });
+		if (agent.status === 'archived') throw ApiError.unavailable('Serviço atualmente desativado.');
 
 		const conversation = conversation_id
 		? await Conversation.findOne({ where: { id: conversation_id, agent_id: agent.id } })
@@ -32,10 +33,10 @@ class Controller {
 			}
 		);
 
-		if (!conversation) throw Object.assign(new Error('Conversa não encontrada.'), { status: 404 });
+		if (!conversation) throw ApiError.notFound('Conversa não encontrada.');
 
 		// Conversa fechada não recebe mais mensagens — mesmo erro do agente arquivado.
-		if (conversation.status === 'closed') throw Object.assign(new Error('Serviço atualmente desativado.'), { status: 503 });
+		if (conversation.status === 'closed') throw ApiError.unavailable('Serviço atualmente desativado.');
 
 		const history = await Message.findAll({
 			where: { conversation_id: conversation.id },
@@ -79,8 +80,6 @@ class Controller {
 			}
 		});
 
-		console.log(qdrantSearch)
-
 		const chunks = (qdrantSearch?.points || []).map((p) => p?.payload?.text ).filter(Boolean);
 
 		if (chunks.length > 0) {
@@ -96,8 +95,6 @@ class Controller {
 			...history.map(m => ({ role: m.role, content: preprocessCorpus(m.content) })),
 			{ role: 'user', content: preprocessCorpus(user_text) }
 		], modelOptions);
-
-		console.log(chat);
 
 		await Message.create({ 
 			conversation_id: conversation.id,
@@ -133,9 +130,7 @@ class Controller {
 		});
 
         if (existingAgent) {
-            const err = new Error('Nome de agente já utilizado, use outro nome.');
-            err.status = 409;
-            throw err;
+            throw ApiError.validation('Nome de agente já utilizado, use outro nome.', 409);
         }
 
 		const agentModelConfig = {
@@ -214,9 +209,7 @@ class Controller {
 	async find(id) {
 		const record = await Agent.findByPk(id);
 		if (!record) {
-			const error = new Error('Agente não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Agente não encontrado.');
 		}
 		return record;
 	}
@@ -225,9 +218,7 @@ class Controller {
 		const record = await Agent.findByPk(id);
 
 		if (!record) {
-			const error = new Error('Agente não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Agente não encontrado.');
 		}
 
 		if (channel_id !== undefined) record.channel_id = channel_id;
@@ -263,15 +254,11 @@ class Controller {
 		const record = await Agent.findByPk(id);
 
 		if (!record) {
-			const error = new Error('Agente não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Agente não encontrado.');
 		}
 
 		if (!['draft', 'active', 'archived'].includes(status)) {
-			const error = new Error("Status must be 'draft', 'active' or 'archived'.");
-			error.status = 400;
-			throw error;
+			throw ApiError.validation("Status must be 'draft', 'active' or 'archived'.");
 		}
 
 		record.status = status;
@@ -282,11 +269,9 @@ class Controller {
 
 	async delete(id) {
 		const record = await Agent.findByPk(id);
-
+		
 		if (!record) {
-			const error = new Error('Agente não encontrado.');
-			error.status = 404;
-			throw error;
+			throw ApiError.notFound('Agente não encontrado.');
 		}
 
 		await record.destroy();
