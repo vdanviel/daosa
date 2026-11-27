@@ -7,6 +7,7 @@ import { KnowledgeChunk } from '../model/knowledgeChunk.js';
 import { KnowledgeSource } from '../model/knowledgeSource.js';
 import { extensionOf } from '../service/knowledge/documentParser.js';
 import Env from '../util/Env.js';
+import { ApiError } from '../contracts/Error.js';
 
 class Controller {
 
@@ -18,14 +19,14 @@ class Controller {
 	async upload(agent_id, user_id, files = []) {
 
 		if (files.length === 0) {
-			throw Object.assign(new Error('No file received.'), { status: 400 });
+			throw ApiError.notFound('No file received.', 400);
 		}
 
 		const agent = await Agent.findOne({ where: { id: agent_id, user_id } });
 
 		if (!agent) {
 			await Promise.all(files.map((file) => unlink(file.path).catch(() => {})));
-			throw Object.assign(new Error('Agent not found.'), { status: 404 });
+			throw ApiError.notFound('Agent not found.');
 		}
 
 		const sources = [];
@@ -75,7 +76,7 @@ class Controller {
 		});
 
 		if (!source) {
-			throw Object.assign(new Error('Knowledge source not found.'), { status: 404 });
+			throw ApiError.notFound('Knowledge source not found.');
 		}
 
 		const collectionName = Env.getQdrantCollection() || 'daosa';
@@ -127,7 +128,7 @@ class Controller {
 		});
 
 		if (!source) {
-			throw Object.assign(new Error('Knowledge source not found.'), { status: 404 });
+			throw ApiError.notFound('Knowledge source not found.');
 		}
 
 		const chunks = await KnowledgeChunk.findAll({
@@ -151,7 +152,7 @@ class Controller {
 		const agent = await Agent.findOne({ where: { id: agent_id, user_id } });
 
 		if (!agent) {
-			throw Object.assign(new Error('Agent not found.'), { status: 404 });
+			throw ApiError.notFound('Agent not found.');
 		}
 
 		const sources = await KnowledgeSource.findAll({
