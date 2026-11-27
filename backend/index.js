@@ -11,6 +11,8 @@ import { version1Router } from './src/router/version/version1Router.js';
 import Env from './src/util/Env.js';
 import { initFixedWorkers } from './src/jobs/worker.js';
 import { ensureQdrantCollections } from './src/connection/qdrant.js';
+import { errorHandler } from './src/middleware/errorHandler.js';
+import { httpDebugHandler } from "./src/middleware/httpDebugHandler.js";
 
 Env.validate();
 
@@ -46,6 +48,9 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   credentials: true
 };
+
+// Intercepta as requisições antes das rotas para registrar o log de debug.
+app.use(httpDebugHandler);
 
 // Registra as rotas da versão 1 da API.
 app.use("/v1", cors(corsOptions), version1Router);

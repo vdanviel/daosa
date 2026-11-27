@@ -69,6 +69,8 @@ class Env {
   static getDiscordPublicKey() { return process.env.DISCORD_PUBLIC_KEY; }
   static getUploadFileSizeLimit() { return process.env.UPLOAD_FILE_SIZE_LIMIT; }
   static getUploadMaxFilesLimit() { return process.env.UPLOAD_MAX_FILE_REQUEST_LIMIT; }
+  static getAwsRegion() { return process.env.AWS_REGION || 'us-east-1'; }
+  static getDebug() { return process.env.DEBUG; }
 
   static validate() {
     const weakSecrets = [
