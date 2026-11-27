@@ -59,6 +59,10 @@ class Env {
   static getGoogleClientId() { return process.env.GOOGLE_CLIENT_ID; }
   static getGoogleClientSecret() { return process.env.GOOGLE_CLIENT_SECRET; }
   static getGoogleRedirectUri() { return process.env.GOOGLE_REDIRECT_URI; }
+  static getMetaAppId() { return process.env.META_APP_ID; }
+  static getMetaAppSecret() { return process.env.META_APP_SECRET; }
+  static getMetaGraphVersion() { return process.env.META_GRAPH_API_VERSION || 'v27.0'; }
+  static getWabaVerifyToken() { return process.env.META_WABA_WEBHOOK_VERIFY_TOKEN }
   static getUploadFileSizeLimit() { return process.env.UPLOAD_FILE_SIZE_LIMIT; }
   static getUploadMaxFilesLimit() { return process.env.UPLOAD_MAX_FILE_REQUEST_LIMIT; }
 
