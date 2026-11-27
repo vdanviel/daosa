@@ -8,6 +8,7 @@ import { ConversationRouter } from "../conversationRouter.js";
 import { MessageRouter } from "../messageRouter.js";
 import { GoogleRouter } from "../googleRouter.js";
 import { WhatsappRouter } from "../whatsappRouter.js";
+import { DiscordRouter } from "../discordRouter.js";
 import { ChannelRouter } from "../channelRouter.js";
 import { IntegrationRouter } from "../integrationRouter.js";
 
@@ -23,6 +24,7 @@ version1Router.use('/conversation', ConversationRouter);
 version1Router.use('/message', MessageRouter);
 version1Router.use('/google', GoogleRouter);
 version1Router.use('/whatsapp', WhatsappRouter);
+version1Router.use('/discord', DiscordRouter);
 version1Router.use('/channel', ChannelRouter);
 version1Router.use('/integration', IntegrationRouter);
 

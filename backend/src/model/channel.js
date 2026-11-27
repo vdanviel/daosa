@@ -65,7 +65,7 @@ async function ensureChannel({ name, type, icon_url, config }) {
 }
 
 /**
- * Cria automaticamente os registros de canais padrão (plataforma, WhatsApp) assim que a tabela for sincronizada. Não duplica canais existentes.
+ * Cria automaticamente os registros de canais padrão (plataforma, WhatsApp, Discord) assim que a tabela for sincronizada. Não duplica canais existentes.
  */
 async function initializeChannels() {
   const createdOwn = await ensureChannel({
@@ -97,6 +97,18 @@ async function initializeChannels() {
 
   if (createdWhatsapp) console.log('Canal padrão do WhatsApp criado com sucesso.');
 
+  const createdDiscord = await ensureChannel({
+    name: 'Discord',
+    type: 'discord',
+    icon_url: '/public/images/discord-logo.png',
+    config: {
+      unlink_message: 'Serviço indisponível, contate nosso time ou tente novamente mais tarde.',
+      error_message: 'Ocorreu um erro inesperado. Por favor, tente novamente em instantes.',
+      auto_reply: 'Recebemos sua mensagem e retornaremos em breve.'
+    }
+  });
+
+  if (createdDiscord) console.log('Canal padrão do Discord criado com sucesso.');
 }
 
 export { Channel, initializeChannels };
