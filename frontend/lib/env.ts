@@ -4,6 +4,14 @@ const values = Object.freeze({
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
   /** API key do Google Cloud com a Google Picker API habilitada. */
   GOOGLE_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_API_KEY,
+  /** App id do app Meta (inicialização do SDK do Facebook). */
+  META_APP_ID: process.env.NEXT_PUBLIC_META_APP_ID,
+  /** Configuration ID do Facebook Login for Embedded Signup. */
+  META_CONFIG_ID: process.env.NEXT_PUBLIC_META_LOGIN_CONFIG_ID,
+  /** Versão da Graph API usada pelo SDK da Meta. */
+  META_GRAPH_API_VERSION: process.env.NEXT_PUBLIC_META_GRAPH_API_VERSION,
+  /** Client ID do app Discord (OAuth2). */
+  DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
 });
 
 export const Env = Object.freeze({

@@ -79,17 +79,17 @@ export default function RegisterPage() {
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="name">Seu nome *</Label>
+          <Label htmlFor="name">Nome da empresa ou seu nome</Label>
           <Input
             id="name"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
-            placeholder="Maria Silva"
+            placeholder="ABCD Advogados"
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="email">E-mail *</Label>
+          <Label htmlFor="email">E-mail</Label>
           <Input
             id="email"
             type="email"
@@ -100,17 +100,17 @@ export default function RegisterPage() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="document">CPF ou CNPJ *</Label>
+          <Label htmlFor="document">CNPJ ou CPF</Label>
           <Input
             id="document"
             value={form.document}
             onChange={(e) => update('document', maskDocument(e.target.value))}
-            placeholder="000.000.000-00"
+            placeholder="00.000.000/0000-00"
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Senha *</Label>
+          <Label htmlFor="password">Senha</Label>
           <Input
             id="password"
             type="password"

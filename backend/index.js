@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { connectDatabase } from './src/connection/database.js';
 import { errorHandler } from './src/middleware/errorHandler.js';
 import { initializeDefaultRole } from './src/model/access/role.js';
-import { initializeDefaultChannel } from './src/model/channel.js';
+import { initializeChannels } from './src/model/channel.js';
 import { version1Router } from './src/router/version/version1Router.js';
 import Env from './src/util/Env.js';
 import { initFixedWorkers } from './src/jobs/worker.js';
@@ -66,7 +66,7 @@ async function start() {
     
     await connectDatabase();
     await initializeDefaultRole();
-    await initializeDefaultChannel();
+    await initializeChannels();
     await ensureQdrantCollections();
     initFixedWorkers()
 

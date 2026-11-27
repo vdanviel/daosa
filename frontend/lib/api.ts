@@ -60,7 +60,12 @@ export class ApiError extends Error {
         body?.jwt_missing ||
         body?.jwt_invalid ||
         (Array.isArray(body?.missing)
-          ? body.missing.map((m: any) => `${m.param}: ${m.msg}`).join('; ')
+          ? body.missing
+              .map((m: any) => {
+                const field = m.param ?? m.field ?? m.path;
+                return field ? `${field}: ${m.msg}` : String(m.msg ?? '');
+              })
+              .join('; ')
           : `HTTP ${status}`)
     );
     this.name = 'ApiError';
@@ -116,15 +121,15 @@ async function request<T = any>(
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
-const get = <T = any>(path: string, opts?: Parameters<typeof request>[2]) =>
-  request<T>('GET', path, opts);
-const post = <T = any>(path: string, body?: any, opts?: Parameters<typeof request>[2]) =>
-  request<T>('POST', path, { ...opts, body });
-const put = <T = any>(path: string, body?: any, opts?: Parameters<typeof request>[2]) =>
-  request<T>('PUT', path, { ...opts, body });
-const patch = <T = any>(path: string, body?: any, opts?: Parameters<typeof request>[2]) =>
-  request<T>('PATCH', path, { ...opts, body });
-const del = <T = any>(path: string) => request<T>('DELETE', path);
+const get = <T = any>(path: Parameters<typeof request>[1], opts?: Parameters<typeof request>[2]) => request<T>('GET', path, opts);
+
+const post = <T = any>(path: Parameters<typeof request>[1], body?: any, opts?: Parameters<typeof request>[2]) => request<T>('POST', path, { ...opts, body });
+
+const put = <T = any>(path: Parameters<typeof request>[1], body?: any, opts?: Parameters<typeof request>[2]) => request<T>('PUT', path, { ...opts, body });
+
+const patch = <T = any>(path: Parameters<typeof request>[1], body?: any, opts?: Parameters<typeof request>[2]) => request<T>('PATCH', path, { ...opts, body });
+
+const del = <T = any>(path: Parameters<typeof request>[1], opts?: Parameters<typeof request>[2]) => request<T>('DELETE', path, opts);
 
 /* ------------------------------- USER ------------------------------------- */
 
@@ -172,13 +177,14 @@ class ChannelApi {
 
 /* ----------------------------- INTEGRATION -------------------------------- */
 
-/** Credencial devolvida por `GET /integration/user/credentials/{id}`. */
+/** Credencial devolvida por `GET /integration/user/credentials/`. */
 export interface IntegrationCredential {
   /** Access token do provedor (`null` quando não há integração). */
   access: string | null;
 }
 
-/** Linha de `GET /integration/user/:id/all` (sem credenciais/metadados). */
+/** Linha de `GET /integration/user/all` (sem credenciais/metadados).
+ * O backend identifica o usuário pelo token JWT, não pelo id no caminho. */
 export interface IntegrationRecord {
   id: number;
   user_id: string;
@@ -192,20 +198,29 @@ export interface IntegrationRecord {
 
 class IntegrationApi {
   /** Integrações do usuário (sem segredos). */
-  all = (userId: string) => get<IntegrationRecord[]>(`/integration/user/${userId}/all`);
+  all = () => get<IntegrationRecord[]>('/integration/user/all');
 
   /** Credencial do usuário para um provider (google → `{ access }` ou `null`).
    *
    * Pode lançar `ApiError` com `code === 'REAUTH_GOOGLE_ACCOUNT'` quando a
    * integração expirou — nesse caso o fluxo é refazer o consentimento. */
-  credentials = (userId: string, provider: string) =>
-    get<IntegrationCredential | null>(`/integration/user/credentials/${userId}`, {
-      query: { provider },
+  credentials = (provider: string) =>
+    get<IntegrationCredential | null>(`/integration/user/credentials`, {
+      query: {
+        "provider": provider
+      }    
     });
 
   /** Integração de um provider específico (`null` quando não existe). */
-  byProvider = (userId: string, provider: string) =>
-    get<IntegrationRecord | null>(`/integration/user/${userId}`, { query: { provider } });
+  byProvider = (provider: string) =>
+    get<IntegrationRecord | null>(`/integration/user`, { query: { provider } });
+
+  /** Deletar uma integration de um provider de um usuário especifico */
+  deleteByProvider = (provider: string) => del(`/integration/user/delete`, {
+    query: {
+      "provider": provider
+    }
+  })
 }
 
 /* -------------------------------- GOOGLE ---------------------------------- */
@@ -213,6 +228,36 @@ class IntegrationApi {
 class GoogleApi {
   /** Gera o link do consentimento OAuth; devolve `{ g_consent_link }`. */
   consentScreen = (body: any) => post<{ g_consent_link: string }>('/google/consent-screen', body);
+}
+
+/* ------------------------------- WHATSAPP --------------------------------- */
+
+class WhatsappApi {
+  /** Prepara a conexão e devolve o `connect_code` de uso único (ver `whatsappRouter`). */
+  connect = () => post<{ connect_code: string }>('/whatsapp/connect');
+
+  /** Troca o `code` do Embedded Signup pelos assets e ativa a integração. */
+  callback = (body: { connect_code: string; code: string; waba_id: string; phone_number_id: string }) =>
+    post<{ waba_id: string; phone_number_id: string; display_phone_number: string | null }>(
+      '/whatsapp/callback',
+      body
+    );
+}
+
+/* -------------------------------- DISCORD --------------------------------- */
+
+class DiscordApi {
+  /** Prepara a conexão e devolve o link de consentimento do Discord OAuth2.
+   * Aceita os dados de texto do agente (`agent_*`) para retornar no callback. */
+  connect = (body: {
+    return_path: string;
+    agent_name?: string;
+    agent_objective?: string;
+    agent_description?: string;
+    agent_temp?: string;
+    agent_top_p?: string;
+    agent_token_limit?: string;
+  }) => post<{ d_consent_link: string }>('/discord/connect', body);
 }
 
 /* ------------------------------- AGENT ------------------------------------ */
@@ -285,6 +330,8 @@ export class Api {
   message = new MessageApi();
   integration = new IntegrationApi();
   google = new GoogleApi();
+  whatsapp = new WhatsappApi();
+  discord = new DiscordApi();
   source = new SourceApi();
 
   get baseURL() {
