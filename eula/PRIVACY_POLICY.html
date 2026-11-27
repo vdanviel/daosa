@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade — DAOSA</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #4f46e5;
+      --surface: #f9fafb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.65;
+      margin: 0;
+      padding: 2.5rem 1.25rem;
+    }
+    main {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.9rem;
+      line-height: 1.25;
+      margin: 0 0 0.5rem 0;
+      color: #111827;
+    }
+    h2 {
+      font-size: 1.3rem;
+      margin: 2rem 0 0.75rem 0;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+      color: #111827;
+    }
+    h3 {
+      font-size: 1.05rem;
+      margin: 1.25rem 0 0.5rem 0;
+      color: #1f2937;
+    }
+    p { margin: 0.75rem 0; }
+    ul, ol {
+      margin: 0.75rem 0;
+      padding-left: 1.4rem;
+    }
+    li { margin: 0.35rem 0; }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 1.75rem 0;
+    }
+    blockquote {
+      margin: 1rem 0;
+      padding: 0.75rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      color: #374151;
+      border-radius: 0 6px 6px 0;
+    }
+    blockquote p { margin: 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.875em;
+      background: #f3f4f6;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.925rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.65rem 0.8rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface);
+      font-weight: 600;
+      color: #111827;
+    }
+    a { color: var(--accent); }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Política de Privacidade — DAOSA</h1>
+<p><strong>Última atualização:</strong> 23 de novembro de 2026</p>
+<p>Esta Política de Privacidade descreve como a plataforma <strong>DAOSA</strong> (Dynamic AI Onboarding Specialist Agent) coleta, utiliza, armazena, compartilha e protege dados pessoais, tanto dos usuários que possuem conta no painel quanto das pessoas que interagem com os agentes de IA por meio dos canais conectados (chat da plataforma, WhatsApp, Telegram, Discord ou API).</p>
+<p>Ao criar uma conta, utilizar o painel, conectar canais ou interagir com um agente, você declara ter lido e compreendido esta Política. Se discordar de algum termo, não utilize a plataforma.</p>
+<hr />
+<h2>1. Quem é responsável pelos dados</h2>
+<p><strong>Controladora dos dados:</strong> 51.044.627 VICTOR DANIEL ARAUJO SILVA — CNPJ 51.044.627/0001-85
+<strong>Endereço:</strong> R ROQUE POLIDORO, 237 — Jardim Liderança, São Paulo — SP, CEP 08.240-075
+<strong>Encarregado pelo tratamento de dados pessoais (DPO):</strong> Victor Daniel Araujo Silva
+<strong>E-mail do encarregado:</strong> VICTORDN.ARAUJO@GMAIL.COM</p>
+<p>Todas as solicitações de titulares (consultas, correção, exclusão, revogação de consentimento) devem ser encaminhadas ao e-mail do encarregado, conforme a Lei Geral de Proteção de Dados — Lei nº 13.709/2018 (LGPD).</p>
+<hr />
+<h2>2. Como a plataforma funciona (contexto dos dados)</h2>
+<p>O DAOSA é uma plataforma de criação e gerenciamento de <strong>agentes de IA especializados</strong> nas regras de negócio de cada organização. Em linhas gerais:</p>
+<ol>
+<li>O usuário cria uma conta e acessa o painel web.</li>
+<li>Cria agentes, definindo nome, objetivo, instruções e permissões.</li>
+<li>Associa <strong>fontes de conhecimento</strong> ao agente: documentos enviados, URLs públicas da internet, textos e conteúdo do Google Drive.</li>
+<li>O sistema processa e indexa esse conteúdo (fragmentação em trechos e geração de vetores em banco vetorial — Qdrant) para permitir respostas contextuais por busca RAG (<em>Retrieval-Augmented Generation</em>).</li>
+<li>O usuário conecta o agente a canais (chat nativo da plataforma, WhatsApp, Telegram, Discord ou API).</li>
+<li>Quando chega uma mensagem, a plataforma recupera o contexto relevante e executa o agente usando o modelo de IA configurado na infraestrutura; a resposta é devolvida pelo canal de origem.</li>
+<li>Toda a interação é registrada em conversas e mensagens, incluindo métricas técnicas (tokens utilizados, ferramentas chamadas, latência).</li>
+</ol>
+<p>Essa operação é o que define <strong>quais dados são necessários</strong> e por que eles são tratados — conforme detalhado a seguir.</p>
+<hr />
+<h2>3. Quais dados coletamos</h2>
+<h3>3.1 Dados fornecidos por você no cadastro e na conta</h3>
+<ul>
+<li><strong>Nome</strong> completo;</li>
+<li><strong>E-mail</strong>;</li>
+<li><strong>Documento</strong> (CPF/CNPJ), quando informado;</li>
+<li><strong>Senha</strong>, armazenada de forma cifrada (nunca em texto puro);</li>
+<li>Data de criação da conta, status da conta e data do último acesso.</li>
+</ul>
+<h3>3.2 Dados de acesso e de segurança</h3>
+<p>Para autenticação, prevenção a fraudes e auditoria, registramos:</p>
+<ul>
+<li><strong>Endereço IP</strong>;</li>
+<li><strong>User agent</strong> (navegador/dispositivo) da sessão;</li>
+<li>Identificador do token de acesso (JWT) e data/hora dos eventos de autenticação (login, criação, troca de e-mail, redefinição de senha).</li>
+</ul>
+<h3>3.3 Conteúdo dos seus agentes e da base de conhecimento</h3>
+<ul>
+<li>Nome, descrição, objetivo, instruções e configuração de modelo dos <strong>agentes</strong>;</li>
+<li><strong>Fontes de conhecimento</strong> enviadas: texto digitado, URLs, arquivos (PDF, DOCX, XLSX, CSV, TXT, MD, imagens e vídeos), nome e metadados do arquivo (tamanho, tipo, extensão);</li>
+<li>Conteúdo do <strong>Google Drive</strong> acessado mediante sua autorização explícita (escopo somente leitura — <code>drive.readonly</code>);</li>
+<li>Trechos fragmentados (chunks) e respectivos <strong>vetores de embedding</strong> armazenados no banco vetorial para busca semântica.</li>
+</ul>
+<h3>3.4 Conversas e mensagens</h3>
+<ul>
+<li><strong>Conteúdo das mensagens</strong> enviadas e recebidas nos canais;</li>
+<li><strong>Identificadores de conversa</strong>, incluindo, quando aplicável, identificador e nome do usuário final no canal externo (ex.: contato do WhatsApp);</li>
+<li><strong>Métricas técnicas</strong> da interação: modelo utilizado, número de tokens, ferramentas/integrações chamadas e latência;</li>
+<li>Metadados de canais (número de telefone do WhatsApp, identificador de bot do Telegram/Discord).</li>
+</ul>
+<h3>3.5 Integrações, chaves e credenciais</h3>
+<ul>
+<li>Credenciais de integrações configuradas por você: <strong>API keys</strong>, tokens OAuth, segredos de webhook e configurações de canais (ex.: <code>api_key</code> do provedor de WhatsApp, <code>bot_token</code> do Telegram/Discord);</li>
+<li><strong>Chaves de API da plataforma</strong> (nome, escopos, limite de uso, expiração e revogação);</li>
+<li>Tokens de acesso e refresh token do Google OAuth.</li>
+</ul>
+<blockquote>
+<p>Esses segredos são armazenados em ambiente seguro da infraestrutura e <strong>nunca são expostos ao frontend</strong> nem a outros usuários.</p>
+</blockquote>
+<h3>3.6 Dados de clientes finais (pessoas que falam com seus agentes)</h3>
+<p>Se você conectar um agente a um canal público, as pessoas que conversarem com ele poderão ter registrados: identificador no canal, nome de perfil, avatar/URL de perfil, metadados fornecidos pela plataforma de origem e o histórico da conversa. A plataforma ainda mantém um indicador de <strong>"não contatar"</strong> (<em>do not contact</em>) para respeitar pedidos de não abordagem.</p>
+<blockquote>
+<p><strong>Importante:</strong> em relação a esses dados, você (ou a organização que utiliza o agente) é o responsável pelo tratamento e o DAOSA atua como operador, executando o tratamento conforme suas instruções. Você declara ter base legal (consentimento ou outro fundamento válido) para coletar e tratar esses dados nos termos da LGPD.</p>
+</blockquote>
+<h3>3.7 Dados de uso, cookies e armazenamento local</h3>
+<ul>
+<li><strong>Cookies</strong> e <strong>armazenamento local</strong> do navegador usados para manter a sessão autenticada e lembrar preferências do painel;</li>
+<li><strong>Logs de erro técnicos</strong> (mensagens de erro, identificador de rastreio e data) gravados em bucket de objetos (AWS S3) para diagnóstico e estabilidade do serviço;</li>
+<li><strong>Cache</strong> temporário em Redis para desempenho.</li>
+</ul>
+<h3>3.8 Dados de comunicação</h3>
+<p>Enviamos e-mails transacionais: <strong>boas-vindas</strong>, <strong>redefinição de senha</strong> e <strong>confirmação de troca de e-mail</strong>. Esses e-mails usam apenas os dados necessários para a entrega.</p>
+<hr />
+<h2>4. Para que usamos os dados (finalidades e bases legais)</h2>
+<table>
+<thead>
+<tr>
+<th>Finalidade</th>
+<th>Base legal (LGPD, art. 7º)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Criar e gerenciar sua conta, autenticar acesso e garantir a segurança da sessão</td>
+<td>Execução de contrato (inciso V) e legítimo interesse em prevenir fraudes (inciso IX)</td>
+</tr>
+<tr>
+<td>Processar fontes de conhecimento, gerar embeddings e responder mensagens pelos agentes</td>
+<td>Execução de contrato (inciso V) — tratamento no seu nome e sob suas instruções</td>
+</tr>
+<tr>
+<td>Registrar conversas, métricas (tokens, latência, ferramentas) e logs de erro para auditoria, suporte e melhoria do serviço</td>
+<td>Legítimo interesse (inciso IX) e execução de contrato (inciso V)</td>
+</tr>
+<tr>
+<td>Enviar comunicações transacionais (boas-vindas, redefinição de senha, troca de e-mail)</td>
+<td>Execução de contrato (inciso V)</td>
+</tr>
+<tr>
+<td>Cumprir obrigações legais e regulatórias</td>
+<td>Cumprimento de obrigação legal (inciso II)</td>
+</tr>
+<tr>
+<td>Integrar serviços externos que você solicitar (Google Drive, WhatsApp, Telegram, Discord, APIs)</td>
+<td>Consentimento específico e destacado (inciso I) — fornecido no momento da conexão e revogável</td>
+</tr>
+</tbody>
+</table>
+<p>Não utilizamos seus dados pessoais para <strong>publicidade comportamental</strong> e <strong>não vendemos dados pessoais</strong> a terceiros.</p>
+<hr />
+<h2>5. Compartilhamento de dados e subprocessadores</h2>
+<p>Compartilhamos dados apenas na medida necessária para operar a plataforma, com as seguintes categorias de terceiros (subprocessadores):</p>
+<table>
+<thead>
+<tr>
+<th>Categoria</th>
+<th>Exemplos</th>
+<th>Dados envolvidos</th>
+<th>Finalidade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Infraestrutura em nuvem</strong></td>
+<td>Amazon Web Services (RDS MySQL, S3, ElastiCache/Redis, CloudFront, Lightsail/EC2, Bedrock)</td>
+<td>Dados armazenados, logs de erro, cache</td>
+<td>Hospedagem, banco de dados, cache, CDN, armazenamento e execução de IA</td>
+</tr>
+<tr>
+<td><strong>Provedores de modelos de IA</strong></td>
+<td>Provedor de LLM e de embeddings configurado na infraestrutura (ex.: Amazon Bedrock, API externa ou modelo local)</td>
+<td>Conteúdo das mensagens e trechos de conhecimento enviados para inferência/embedding</td>
+<td>Gerar respostas dos agentes e vetores para busca semântica</td>
+</tr>
+<tr>
+<td><strong>Banco vetorial</strong></td>
+<td>Qdrant</td>
+<td>Trechos (chunks) e embeddings</td>
+<td>Recuperação de conhecimento (RAG)</td>
+</tr>
+<tr>
+<td><strong>Google</strong></td>
+<td>Google Drive / OAuth 2.0</td>
+<td>E-mail, perfil e arquivos acessados sob escopo somente leitura, conforme sua autorização</td>
+<td>Indexar documentos do Drive na base de conhecimento</td>
+</tr>
+<tr>
+<td><strong>Meta / WhatsApp</strong></td>
+<td>WhatsApp Business Platform</td>
+<td>Conteúdo das conversas e metadados do canal</td>
+<td>Entregar e receber mensagens pelo WhatsApp</td>
+</tr>
+<tr>
+<td><strong>Telegram / Discord</strong></td>
+<td>APIs dos respectivos serviços</td>
+<td>Conteúdo das conversas e metadados do bot</td>
+<td>Entregar e receber mensagens</td>
+</tr>
+<tr>
+<td><strong>Serviços de e-mail</strong></td>
+<td>Servidor SMTP configurado</td>
+<td>Nome e e-mail</td>
+<td>Envio de e-mails transacionais</td>
+</tr>
+<tr>
+<td><strong>Integrações configuradas por você</strong></td>
+<td>MCP servers, APIs externas, webhooks</td>
+<td>Dados estritamente necessários para a ação solicitada</td>
+<td>Executar ferramentas e consultas autorizadas por agente</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Regras que aplicamos:</strong></p>
+<ul>
+<li>Os subprocessadores são instruídos a tratar os dados conforme esta Política e a LGPD;</li>
+<li><strong>Credenciais de providers e integrações nunca são expostas ao frontend</strong>;</li>
+<li>Servidores <strong>MCP</strong> exigem autorização explícita e permissões limitadas por agente;</li>
+<li>O acesso a ferramentas e ações externas é controlado por agente e pelas permissões registradas;</li>
+<li>Não comercializamos dados pessoais.</li>
+</ul>
+<h3>5.1 Transferência internacional</h3>
+<p>Alguns subprocessadores podem armazenar ou processar dados fora do Brasil. Nesses casos, adotamos salvaguardas contratuais adequadas (cláusulas contratuais padrão e obrigações de segurança) conforme os artigos 33 a 36 da LGPD.</p>
+<hr />
+<h2>6. Como protegemos seus dados</h2>
+<ul>
+<li><strong>Isolamento por usuário:</strong> cada usuário acessa somente seus próprios dados e agentes (isolamento por <code>user_id</code>);</li>
+<li><strong>Autenticação</strong> validada em todas as operações protegidas, com tokens assinados (JWT) e expiração;</li>
+<li><strong>Senhas cifradas</strong> e nunca em texto puro;</li>
+<li><strong>Credenciais de terceiros</strong> em armazenamento seguro da infraestrutura, fora do alcance do frontend;</li>
+<li><strong>Comunicação criptografada</strong> (HTTPS/TLS) em trânsito;</li>
+<li><strong>Tratamento de conteúdo como dado não confiável:</strong> documentos, páginas e mensagens são tratados como dados, nunca como instruções privilegiadas do sistema (proteção contra injeção de prompt);</li>
+<li><strong>Permissões granulares</strong> por agente para ferramentas, integrações e ações externas;</li>
+<li><strong>Registro de eventos de autenticação</strong> (IP, user agent, data/hora) para auditoria;</li>
+<li><strong>Logs de erro</strong> segregados em bucket próprio, com acesso restrito;</li>
+<li>Acesso administrativo ao ambiente limitado ao mínimo necessário e baseado em credenciais individuais.</li>
+</ul>
+<p>Nenhum sistema é 100% seguro. Em caso de incidente de segurança que possa acarretar risco ou dano relevante a titulares, adotaremos as medidas previstas na LGPD e comunicaremos as autoridades competentes e os titulares afetados conforme o art. 48 da Lei nº 13.709/2018.</p>
+<hr />
+<h2>7. Retenção e eliminação de dados</h2>
+<table>
+<thead>
+<tr>
+<th>Dado</th>
+<th>Retenção</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Conta do usuário (cadastro, agentes, integrações, canais, conversas, conhecimento)</td>
+<td>Enquanto a conta estiver ativa. A exclusão da conta aciona a remoção dos dados associados (incluindo integrações vinculadas)</td>
+</tr>
+<tr>
+<td>Contas excluídas (exclusão lógica)</td>
+<td>Marcadas como excluídas (<code>deleted_at</code>), com remoção definitiva em janela de retenção técnica seguida de descarte</td>
+</tr>
+<tr>
+<td>Registros de autenticação (IP, user agent, data/hora)</td>
+<td>Pelo período necessário à segurança e à prestação de contas</td>
+</tr>
+<tr>
+<td>Conversas e mensagens</td>
+<td>Enquanto a conta e o respectivo agente existirem, salvo pedido de exclusão do titular ou do responsável</td>
+</tr>
+<tr>
+<td>Logs de erro técnicos</td>
+<td>Período de retenção operacional (definido em política de ciclo de vida do armazenamento)</td>
+</tr>
+<tr>
+<td>Chaves de API revogadas</td>
+<td>Marcadas como revogadas e mantidas apenas para auditoria pelo período legal aplicável</td>
+</tr>
+<tr>
+<td>E-mails transacionais</td>
+<td>Apenas o necessário ao disparo; registros mínimos de envio</td>
+</tr>
+</tbody>
+</table>
+<p>Ao encerrar a conta, os dados são eliminados ou anonimizados após o cumprimento de eventuais obrigações legais de retenção, salvo hipóteses de conservação previstas em lei.</p>
+<hr />
+<h2>8. Seus direitos (art. 18 da LGPD)</h2>
+<p>Como titular de dados, você pode, a qualquer momento, solicitar:</p>
+<ol>
+<li><strong>Confirmação</strong> da existência de tratamento;</li>
+<li><strong>Acesso</strong> aos dados;</li>
+<li><strong>Correção</strong> de dados incompletos, inexatos ou desatualizados;</li>
+<li><strong>Anonimização, bloqueio ou eliminação</strong> de dados desnecessários, excessivos ou tratados em desconformidade;</li>
+<li><strong>Portabilidade</strong> dos dados a outro fornecedor de serviço ou produto, mediante requisição técnica;</li>
+<li><strong>Eliminação</strong> dos dados tratados com consentimento (ressalvadas as hipóteses de retenção legal);</li>
+<li><strong>Informação sobre compartilhamento</strong> com entidades públicas e privadas;</li>
+<li><strong>Informação sobre a possibilidade de não fornecer consentimento</strong> e sobre as consequências da negativa;</li>
+<li><strong>Revogação do consentimento</strong>, a qualquer momento.</li>
+</ol>
+<h3>Como exercer seus direitos</h3>
+<p>Envie sua solicitação para <strong>VICTORDN.ARAUJO@GMAIL.COM</strong>, informando:
+- seu nome completo e e-mail cadastrado;
+- o direito que deseja exercer;
+- informação adicional que ajude a identificar a solicitação.</p>
+<p>Responderemos em prazo razoável, conforme o art. 19 da LGPD, podendo ser solicitada verificação de identidade para proteção dos dados. O atendimento é gratuito.</p>
+<hr />
+<h2>9. Cookies e armazenamento local</h2>
+<p>Utilizamos cookies e armazenamento local estritamente para:</p>
+<ul>
+<li><strong>Manter sua sessão autenticada</strong> no painel;</li>
+<li><strong>Lembrar preferências</strong> de interface;</li>
+<li><strong>Segurança da conta</strong> (identificação de eventos de autenticação).</li>
+</ul>
+<p>Não utilizamos cookies de publicidade comportacional. Você pode configurar seu navegador para bloquear cookies ou apagar armazenamento local; porém, isso pode impedir o funcionamento do login no painel.</p>
+<hr />
+<h2>10. Dados de crianças e adolescentes</h2>
+<p>A plataforma é direcionada a <strong>empresas e profissionais</strong>, não sendo destinada a crianças. Não coletamos deliberadamente dados de crianças. Se você identificar que um agente conectado a um canal recebe dados de uma criança sem o devido consentimento, encaminhe a solicitação ao encarregado para que as medidas cabíveis sejam adotadas.</p>
+<hr />
+<h2>11. Uso por conta de empresas (responsabilidade do usuário)</h2>
+<p>Se você utiliza o DAOSA <strong>em nome de uma organização</strong>, declara que:</p>
+<ul>
+<li>tem autorização para vincular contas, agentes, canais e integrações àquela organização;</li>
+<li>é responsável pelo conteúdo carregado em suas bases de conhecimento;</li>
+<li>possui base legal válida para tratar dados de terceiros (clientes, colaboradores e contatos) que interajam com seus agentes;</li>
+<li>responderá pelos pedidos de titulares que lhe forem direcionados, podendo encaminhá-los ao DAOSA na qualidade de operador, na medida em que o tratamento seja executado pela plataforma.</li>
+</ul>
+<hr />
+<h2>12. Alterações desta Política</h2>
+<p>Podemos atualizar esta Política de Privacidade para refletir mudanças legais, operacionais ou de funcionalidade. A data de "última atualização" no topo do documento será sempre revisada. Alterações relevantes serão comunicadas por e-mail ou por aviso no painel com antecedência razoável.</p>
+<hr />
+<h2>13. Contato</h2>
+<p><strong>Encarregado de Proteção de Dados (DPO)</strong>
+51.044.627 VICTOR DANIEL ARAUJO SILVA
+Victor Daniel Araujo Silva
+E-mail: <strong>VICTORDN.ARAUJO@GMAIL.COM</strong></p>
+<hr />
+<p><em>Este documento é parte integrante dos Termos de Uso da plataforma DAOSA e deve ser lido em conjunto com eles.</em></p>
+    <footer>
+      DAOSA — Dynamic AI Onboarding Specialist Agent • CNPJ 51.044.627/0001-85
+    </footer>
+  </main>
+</body>
+</html>
