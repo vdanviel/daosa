@@ -38,8 +38,8 @@ import {
 } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { api, ApiError } from '@/lib/api';
+import { AgentDescriptionEditor } from '@/components/agents/agent-description-editor';
 import { ChannelPicker } from '@/components/agents/channel-picker';
 import { DocumentsSection } from '@/components/agents/documents-section';
 import {
@@ -375,20 +375,27 @@ export default function AgentsPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="agent-description-mobile">Descrição</Label>
-              <Textarea
+              <AgentDescriptionEditor
                 id="agent-description-mobile"
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Contexto adicional detalhado."
-                maxLength={150}
-                rows={3}
+                onChange={(v) => setForm((f) => ({ ...f, description: v }))}
               />
-              <p className="text-[11px] text-muted-foreground">
-                {form.description.length}/150 caracteres
-              </p>
             </div>
 
-            <ChannelPicker value={form.channelId} onChange={(id) => setForm((f) => ({ ...f, channelId: id }))} />
+            <ChannelPicker
+              value={form.channelId}
+              onChange={(id) => setForm((f) => ({ ...f, channelId: id }))}
+              returnPath={editing ? `/dashboard/agents?edit=${editing.id}` : undefined}
+              resumeData={{
+                agent_name: form.name,
+                agent_objective: form.objective,
+                agent_description: form.description,
+                agent_temp: form.temp,
+                agent_top_p: form.topP,
+                agent_token_limit: form.numPredict,
+              }}
+              initialChannel={searchParams.get('channel') || undefined}
+            />
 
             <DocumentsSection form={form} returnPath={`/dashboard/agents?edit=${editing?.id ?? ''}`} onStagedChange={setStagedDocs} uploadLimits={uploadLimits} sources={agentSources} onDeleteSource={(id) => setAgentSources((prev) => prev.filter((s: any) => s.id !== id))} />
 
@@ -686,20 +693,27 @@ export default function AgentsPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="agent-description">Descrição</Label>
-              <Textarea
+              <AgentDescriptionEditor
                 id="agent-description"
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Contexto adicional detalhado."
-                maxLength={150}
-                rows={3}
+                onChange={(v) => setForm((f) => ({ ...f, description: v }))}
               />
-              <p className="text-[11px] text-muted-foreground">
-                {form.description.length}/150 caracteres
-              </p>
             </div>
 
-            <ChannelPicker value={form.channelId} onChange={(id) => setForm((f) => ({ ...f, channelId: id }))} />
+            <ChannelPicker
+              value={form.channelId}
+              onChange={(id) => setForm((f) => ({ ...f, channelId: id }))}
+              returnPath={editing ? `/dashboard/agents?edit=${editing.id}` : undefined}
+              resumeData={{
+                agent_name: form.name,
+                agent_objective: form.objective,
+                agent_description: form.description,
+                agent_temp: form.temp,
+                agent_top_p: form.topP,
+                agent_token_limit: form.numPredict,
+              }}
+              initialChannel={searchParams.get('channel') || undefined}
+            />
 
             <DocumentsSection form={form} returnPath={`/dashboard/agents?edit=${editing?.id ?? ''}`} onStagedChange={setStagedDocs} uploadLimits={uploadLimits} sources={agentSources} onDeleteSource={(id) => setAgentSources((prev) => prev.filter((s: any) => s.id !== id))} />
 
