@@ -1,11 +1,13 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../connection/database.js';
 import { User } from './user.js';
+import { Channel } from './channel.js';
 
 const Integration = sequelize.define('Integration', 
   {
     id: { type: DataTypes.BIGINT.UNSIGNED, primaryKey: true, autoIncrement: true, allowNull: false },
     user_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: false },
+    channel_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true },
     provider: { type: DataTypes.STRING(50), allowNull: false },
     label: { type: DataTypes.STRING(150), allowNull: true },
     auth_type: {
@@ -40,6 +42,12 @@ Integration.belongsTo(User, {
   as: 'user',
   onDelete: 'CASCADE',
   onUpdate: 'CASCADE'
+});
+
+Integration.belongsTo(Channel, {
+  foreignKey: 'channel_id',
+  as: 'channel',
+  onDelete: 'SET NULL',
 });
 
 User.addHook('beforeDestroy', async (user, options) => {

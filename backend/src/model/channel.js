@@ -51,15 +51,24 @@ const Channel = sequelize.define('Channel', {
 });
 
 /**
- * Cria automaticamente o registro do canal 'own' (canal nativo da plataforma)
- * assim que a tabela for sincronizada.
+ * Garante que um canal padrão exista, atualizando-o quando já estiver cadastrado.
+ * Idempotente: não duplica o canal a cada reinício do servidor.
  */
-async function initializeDefaultChannel() {
-  const existingOwnChannel = await Channel.findOne({ where: { type: 'own' } });
-  
-  if (existingOwnChannel) return;
+async function ensureChannel({ name, type, icon_url, config }) {
+  const existing = await Channel.findOne({ where: { type } });
+  if (existing) {
+    await existing.update({ name, icon_url, config });
+    return false;
+  }
+  await Channel.create({ name, type, icon_url, config });
+  return true;
+}
 
-  await Channel.create({
+/**
+ * Cria automaticamente os registros de canais padrão (plataforma, WhatsApp) assim que a tabela for sincronizada. Não duplica canais existentes.
+ */
+async function initializeChannels() {
+  const createdOwn = await ensureChannel({
     name: 'Plataforma',
     type: 'own',
     icon_url: '/public/images/icon-own-chat.png',
@@ -72,7 +81,22 @@ async function initializeDefaultChannel() {
       allowed_domains: ['*']
     }
   });
-  console.log('Canal padrão da plataforma (own) criado com sucesso.');
+
+  if (createdOwn) console.log('Canal padrão da plataforma (own) criado com sucesso.');
+
+  const createdWhatsapp = await ensureChannel({
+    name: 'WhatsApp',
+    type: 'whatsapp',
+    icon_url: '/public/images/whatsapp-logo.png',
+    config: {
+      unlink_message: 'Serviço indisponível, contate nosso time ou tente novamente mais tarde.',
+      error_message: 'Ocorreu um erro inesperado. Por favor, tente novamente em instantes.',
+      auto_reply: 'Recebemos sua mensagem e retornaremos em breve.'
+    }
+  });
+
+  if (createdWhatsapp) console.log('Canal padrão do WhatsApp criado com sucesso.');
+
 }
 
-export { Channel, initializeDefaultChannel };
+export { Channel, initializeChannels };
