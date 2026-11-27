@@ -86,7 +86,7 @@ export function DocumentsSection({
 
     if (user?.id) {
       api.integration
-        .credentials(String(user.id), 'google')
+        .credentials('google')
         .then((res) => {
           if (!active) return;
           setAccessToken(res?.access || null);
