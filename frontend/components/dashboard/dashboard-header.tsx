@@ -41,6 +41,7 @@ export function DashboardHeader() {
             src="/images/daosa-logo.png"
             alt="Daosa"
             width={100}
+            height={50}
             priority
           />
         </Link>
