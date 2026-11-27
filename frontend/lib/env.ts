@@ -10,6 +10,8 @@ const values = Object.freeze({
   META_CONFIG_ID: process.env.NEXT_PUBLIC_META_LOGIN_CONFIG_ID,
   /** Versão da Graph API usada pelo SDK da Meta. */
   META_GRAPH_API_VERSION: process.env.NEXT_PUBLIC_META_GRAPH_API_VERSION,
+  /** Client ID do app Discord (OAuth2). */
+  DISCORD_CLIENT_ID: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
 });
 
 export const Env = Object.freeze({
