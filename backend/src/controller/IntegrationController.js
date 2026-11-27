@@ -1,5 +1,7 @@
 import { Integration } from '../model/integration.js';
 import { refreshGoogleCredentials } from '../connection/google.js';
+import { ApiError } from '../contracts/Error.js';
+import { Op } from "sequelize";
 
 class Controller {
 
@@ -19,11 +21,14 @@ class Controller {
 
     async findTokenByUser(user_id, provider) {
 
+        if(!user_id || !provider) throw ApiError.notFound("ID de usuário e/ou provedor são necessários.")
+
         const integration = await Integration.findOne({
             where: {
-                user_id,
-                ...(provider ? { provider } : {})
-            }
+                    user_id: user_id,
+                    provider: provider
+            },
+            order: [['created_at', 'DESC']]
         });
 
         if (!integration) return null;
@@ -36,10 +41,42 @@ class Controller {
                 return { access: access_token };
             }
 
-            default:
-               throw new Error("Necessário declarar o provider", {status: 400});
+            case 'whatsapp': {
+                // O business token da Meta não expira no fluxo padrão: só lemos.
+                const credentials = integration.credentials ? JSON.parse(integration.credentials) : {};
+
+                return { access: credentials.business_token ?? null };
+            }
+
+            case 'discord': {
+                // O bot token do Discord não expira no fluxo padrão: só lemos.
+                const credentials = integration.credentials ? JSON.parse(integration.credentials) : {};
+
+                return { access: credentials.access_token ?? null };
+            }
+
+            default: {
+               throw ApiError.notFound("Necessário declarar o provider", 400);
+            }
                
         }
+
+    }
+
+    async deleteUserProvider(user_id, provider){
+
+        if(!user_id || !provider) throw ApiError.notFound("ID de usuário e/ou provedor são necessários.")
+
+        const integration = await Integration.findOne({
+            where: {
+                    user_id: user_id,
+                    provider: provider
+            }
+        });
+
+        await integration.destroy();
+
+		return { message: 'Integração deletada com sucesso.' };
 
     }
 
