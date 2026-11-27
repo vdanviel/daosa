@@ -84,7 +84,7 @@ Para alinhar todos os conteiners.
 
 ## Padrão de versionamento
 
-1. Crie uma branch a partir de `main`: `username:feature/nome-da-feature` (ou `fix/`, `docs/`, `refactor/`, etc...)
+1. Crie uma branch a partir de `main`: `feat/nome-da-feature` (ou `fix/`, `docs/`, `refactor/`, etc...)
 2. Faça commits seguindo o padrão Angular:
    - `feat:` — nova funcionalidade
    - `fix:` — correção de bug
@@ -175,15 +175,16 @@ flowchart TB
 
     subgraph AWS["AWS — Infraestrutura de custo mínimo"]
         R["Route 53 / DNS"]
+        
         CF["CloudFront"]
 
-        EC2BE["EC2 t3.small<br/>Docker Compose<br/>Backend / Engine / API"]
+        LGTSLBE["Lightsail <br> Plan 2 GB RAM <br> (2 vCPUs,<br> 60 GB SSD,<br> 3 TB transfer)"]
 
         CACHE[("Amazon ElastiCache<br/>Redis (utilizando o SDK ioredis)")]
 
         RDS[("RDS MySQL t3.micro<br/>Database: daosa")]
 
-        EC2Q["EC2 t3.medium / large<br/>Qdrant (container)<br/>EBS grande — vetores / chunks"]
+        LGTSLQ["Lightsail <br> Plan 2 GB RAM <br> (2 vCPUs,<br> 60 GB SSD,<br> 3 TB transfer)"]
 
         S3KB[("S3 — Logs / Mídia ")]
 
@@ -196,13 +197,13 @@ flowchart TB
 
     U -->|HTTPS| R
     R --> CF
-    CF --> EC2BE
+    CF --> LGTSLBE
 
-    EC2BE --> CACHE
+    LGTSLBE --> CACHE
     CACHE --> RDS
 
-    EC2BE -->|Vetorial / RAG| EC2Q
-    EC2BE -->|LLM / Embeddings| BED
-    EC2BE -->|Upload| S3KB
-    EC2BE -->|OAuth / Tokens| G
+    LGTSLBE -->|Vetorial / RAG| LGTSLQ
+    LGTSLBE -->|LLM / Embeddings| BED
+    LGTSLBE -->|Upload| S3KB
+    LGTSLBE -->|OAuth / Tokens| G
 ```

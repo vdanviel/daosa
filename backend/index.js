@@ -5,7 +5,7 @@ import session from 'express-session';
 import swaggerUi from 'swagger-ui-express';
 import { fileURLToPath } from 'node:url';
 import { connectDatabase } from './src/connection/database.js';
-import { initializeDefaultRole } from './src/model/access/role.js';
+import { errorHandler } from './src/middleware/errorHandler.js';
 import { initializeChannels } from './src/model/channel.js';
 import { version1Router } from './src/router/version/version1Router.js';
 import Env from './src/util/Env.js';
@@ -61,7 +61,7 @@ app.get('/', (req, res) => {
   return res.send("API CORENODEJS API");
 });
 
-// O tratador de erros deve ser registrado depois das rotas.
+//middlewares gerais
 app.use(errorHandler);
 
 // Prepara as dependências antes de começar a aceitar requisições.
@@ -69,7 +69,6 @@ async function start() {
   try {
     
     await connectDatabase();
-    await initializeDefaultRole();
     await initializeChannels();
     await ensureQdrantCollections();
     initFixedWorkers()

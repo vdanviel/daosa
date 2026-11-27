@@ -14,6 +14,7 @@
  */
 
 import { Env } from './env';
+import { loadScript } from "./utils";
 
 const API_JS_URL = 'https://apis.google.com/js/api.js';
 
@@ -79,28 +80,6 @@ function keepPickerAboveModals(): () => void {
 }
 
 let pickerApi: Promise<void> | null = null;
-
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
-    if (existing) {
-      if ((window as any).gapi) {
-        resolve();
-        return;
-      }
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('Falha ao carregar o script do Google.')));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Falha ao carregar o script do Google.'));
-    document.head.appendChild(script);
-  });
-}
 
 /** Resolve quando `window.google.picker` está disponível. */
 function loadPicker(): Promise<void> {

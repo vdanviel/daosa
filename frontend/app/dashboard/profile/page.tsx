@@ -155,7 +155,7 @@ export default function ProfilePage() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome"
+                  placeholder="Nome da empresa ou seu nome"
                   maxLength={255}
                 />
               </div>

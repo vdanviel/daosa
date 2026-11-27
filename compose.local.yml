@@ -9,6 +9,9 @@ services:
       - "3002:3002"
     env_file:
       - "frontend/.env"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
      - daosa
     
@@ -31,6 +34,9 @@ services:
     environment:
       QDRANT_HOST: db-vector-daosa
       QDRANT_PORT: 6333
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     networks:
      - daosa
 

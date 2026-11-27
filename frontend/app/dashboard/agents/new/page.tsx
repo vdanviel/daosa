@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { api, ApiError } from '@/lib/api';
 import { ChannelPicker } from '@/components/agents/channel-picker';
 import { DocumentsSection } from '@/components/agents/documents-section';
+import { AgentDescriptionEditor } from '@/components/agents/agent-description-editor';
 import { type AgentDocument } from '@/lib/docs-stash';
 import {
   AGENT_LIMITS,
@@ -108,7 +108,6 @@ export default function NewAgentPage() {
                 onChange={(e) => update('name', e.target.value)}
                 placeholder="Ex.: Agente de onboarding"
                 maxLength={AGENT_LIMITS.name}
-                required
               />
             </div>
 
@@ -120,26 +119,31 @@ export default function NewAgentPage() {
                 onChange={(e) => update('objective', e.target.value)}
                 placeholder="Ex.: Onboarding de novos clientes"
                 maxLength={AGENT_LIMITS.objective}
-                required
               />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="agent-description">Descrição</Label>
-              <Textarea
+              <AgentDescriptionEditor
                 id="agent-description"
                 value={form.description}
-                onChange={(e) => update('description', e.target.value)}
-                placeholder="Contexto adicional, tom de voz e limites do agente."
-                maxLength={AGENT_LIMITS.description}
-                rows={3}
+                onChange={(v) => update('description', v)}
               />
-              <p className="text-[11px] text-muted-foreground">
-                {form.description.length}/{AGENT_LIMITS.description} caracteres
-              </p>
             </div>
 
-            <ChannelPicker value={form.channelId} onChange={(id) => update('channelId', id)} />
+            <ChannelPicker
+              value={form.channelId}
+              onChange={(id) => update('channelId', id)}
+              initialChannel={searchParams.get('channel') || undefined}
+              resumeData={{
+                agent_name: form.name,
+                agent_objective: form.objective,
+                agent_description: form.description,
+                agent_temp: form.temp,
+                agent_top_p: form.topP,
+                agent_token_limit: form.numPredict,
+              }}
+            />
 
             <DocumentsSection form={form} returnPath="/dashboard/agents/new" onStagedChange={setStagedDocs} />
 

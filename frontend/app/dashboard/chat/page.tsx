@@ -182,14 +182,21 @@ export default function ChatPage() {
    */
   const agentArchived = agent?.status === 'archived';
   const conversationClosed = !!activeConversation?.id && activeConversation.status === 'closed';
-  const sendBlocked = agentArchived || conversationClosed;
+  // Só é possível enviar mensagens pelo painel quando o agente usa o canal "own" (web chat, ID 1).
+  // Canais de comunicação externos (WhatsApp, Discord, etc.) não permitem envio daqui.
+  const agentExternalChannel =
+    agent?.channel_id != null && String(agent.channel_id) !== String(WEB_CHANNEL_ID);
+
+  const sendBlocked = agentArchived || conversationClosed || agentExternalChannel;
 
   /** Motivo do bloqueio, no mesmo texto do retorno do backend. */
   const blockedReason = agentArchived
     ? 'este agente está arquivado'
     : conversationClosed
       ? 'esta conversa está fechada'
-      : null;
+      : agentExternalChannel
+        ? 'Este chat não pode enviar mensagens pelo painel porque usa um canal externo de comunicação.'
+        : null;
 
   /* ------------------------------- CARGA INICIAL ------------------------------- */
 
@@ -782,9 +789,16 @@ export default function ChatPage() {
 
           {/* Aviso: serviço indisponível (agente arquivado ou conversa fechada) */}
           {sendBlocked && (
-            <div className="flex shrink-0 items-center gap-2 border-b border-destructive/30 bg-destructive/10 px-4 py-2.5 text-xs font-medium text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              Serviço indisponível — {blockedReason} e não pode receber mensagens.
+            <div
+              className={cn(
+                'flex shrink-0 items-center gap-2 border-b px-4 py-2.5 text-xs font-medium',
+                agentExternalChannel
+                  ? 'border-amber-400/40 bg-amber-400/15 text-amber-700'
+                  : 'border-destructive/30 bg-destructive/10 text-destructive'
+              )}
+            >
+              <AlertCircle className={cn('h-4 w-4 shrink-0', agentExternalChannel ? 'text-amber-600' : 'text-destructive')} />
+              {agentExternalChannel ? blockedReason : `Serviço indisponível, ${blockedReason}.`}
               {conversationClosed && !agentArchived && (
                 <Button
                   variant="outline"
@@ -1042,7 +1056,9 @@ export default function ChatPage() {
                     onKeyDown={onComposerKeyDown}
                     placeholder={
                       sendBlocked
-                        ? `Serviço indisponível — ${blockedReason}.`
+                        ? agentExternalChannel
+                          ? blockedReason ?? ''
+                          : `Serviço indisponível — ${blockedReason ?? ''}.`
                         : `Conversar com ${agent.name}...`
                     }
                     rows={1}

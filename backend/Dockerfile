@@ -10,4 +10,6 @@ RUN npm install
 
 COPY . .
 
+RUN node swagger.js
+
 CMD ["npm", "run", "dev"]
