@@ -18,13 +18,9 @@ const isAuth = (req, res, next) => {
     jwt.verify(bearerToken, JWT_SECRET, (err, decoded) => {
         
         if (err) {
-            console.log(err);
             return res.status(403).json({ jwt_invalid: 'Invalid or expired token.' });
         }else{
             req.auth = decoded;
-
-            console.log(req.auth)
-
             next();
         }
     

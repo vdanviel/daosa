@@ -1,14 +1,13 @@
 import { Auth } from "../../model/access/auth.js";
 import { Op } from 'sequelize';
+import { ApiError } from '../../contracts/Error.js';
 
 class Controller {
 
     async find(id) {
         const auth = await Auth.findByPk(id);
         if (!auth) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
         return auth;
 	}
@@ -25,9 +24,7 @@ class Controller {
         });
 
         if (auth.length == 0 ) {
-            const err = new Error("Não há auths registrados(a).");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não há auths registrados(a).");
         }
 
         return {
@@ -78,9 +75,7 @@ class Controller {
         const [updatedCount] = await Auth.update(fieldsToUpdate, { where: { id: authId } });
 
         if (updatedCount === 0) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
 
         return await this.find(authId);
@@ -90,9 +85,7 @@ class Controller {
 		// Deleta registro
 		const deletedCount = await Auth.destroy({ where: { id: authId } });
         if (deletedCount === 0) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
         return { message: "Deletado com sucesso." };
 	}

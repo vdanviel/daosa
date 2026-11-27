@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Op, fn, col } from 'sequelize';
 import Env from '../util/Env.js';
 import { emailQueue } from '../jobs/queue.js';
+import { ApiError } from '../contracts/Error.js';
 
 const withoutPassword = (user) => {
     const { password, ...safeUser } = user.get({ plain: true });
@@ -23,9 +24,7 @@ class Controller {
     async find(userId) {
         const user = await User.findByPk(userId);
         if (!user) {
-            const err = new Error('Usuário não encontrado.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não encontrado.');
         }
         return withoutPassword(user);
     }
@@ -133,16 +132,12 @@ class Controller {
     async register(name, document, email, password) {
 
         if (!Util.isValidDocument(document)) {
-            const err = new Error('Documento inválido.');
-            err.status = 400;
-            throw err;
+            throw ApiError.validation('Documento inválido.');
         }
 
-        const existingUser = await User.findOne({ where: { email } });
+        const existingUser = await User.findOne({ where: { [Op.or]: [{ email: email }, { document: document }] } });
         if (existingUser) {
-            const err = new Error('Usuário já existe.');
-            err.status = 409;
-            throw err;
+            throw ApiError.validation('Usuário já existe.', 409);
         }
 
         const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
@@ -161,19 +156,16 @@ class Controller {
 
     async login(email, password, ip, userAgent) {
         const user = await User.findOne({ where: { email } });
+
         if (!user || !bcrypt.compareSync(password, user.password)) {
-            const err = new Error('Email ou senha inválidos.');
-            err.status = 401;
-            throw err;
+            throw ApiError.unauthorized('Email ou senha inválidos.');
         }
+
         if (user.status !== 'active') {
-            const err = new Error('Usuário desativado ou ainda não ativado.');
-            err.status = 403;
-            throw err;
+            throw ApiError.forbidden('Usuário desativado ou ainda não ativado.');
         }
 
         await user.update({ last_login_at: new Date() });
-        const userData = withoutPassword(user);
         const currentAuth = await authController.create(user.id, ip, userAgent, 'user-login');
         //const role = await roleController.find('user-role');
         
@@ -182,7 +174,7 @@ class Controller {
             scope: []
         }, Env.getJwtSecret(), { expiresIn: '168h' });
 
-        return { access_token: accessToken, user: userData };
+        return { access_token: accessToken };
     }
 
     //so pode atualizar a si mesmo
@@ -191,9 +183,7 @@ class Controller {
         const [updatedCount] = await User.update({ name: name, document: document }, { where: { id: userId } });
 
         if (updatedCount === 0) {
-            const err = new Error('Usuário não encontrado.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não encontrado.');
         }
 
         return this.find(userId);
@@ -202,9 +192,7 @@ class Controller {
     async findByEmail(email) {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            const err = new Error('Usuário não encontrado.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não encontrado.');
         }
         return withoutPassword(user);
     }
@@ -212,9 +200,7 @@ class Controller {
     async toggleStatus(userId) {
         const user = await User.findByPk(userId);
         if (!user) {
-            const err = new Error('Usuário não encontrado.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não encontrado.');
         }
         const status = user.status === 'active' ? 'disabled' : 'active';
         await user.update({ status });
@@ -224,9 +210,7 @@ class Controller {
     async sendForgotPasswordCode(email) {
         const user = await User.findOne({ where: { email } });
         if (!user) {
-            const err = new Error('Usuário não existe.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não existe.');
         }
 
         const code = Util.generateCode(5);
@@ -244,9 +228,7 @@ class Controller {
             });
         } catch (error) {
             console.error('Erro ao enviar email de redefinição de senha:', error);
-            const err = new Error('Falha ao enviar email de redefinição de senha.');
-            err.status = 500;
-            throw err;
+            throw ApiError.internal('Falha ao enviar email de redefinição de senha.');
         }
         return { message: 'O código de redefinição de senha foi enviado ao e-mail com sucesso.' };
     }
@@ -254,26 +236,18 @@ class Controller {
     async changePassword(oldPassword, newPassword, code, secret) {
         const personalAT = await PersonalAccessTokenController.verifyByCode(code);
         if (personalAT.error) {
-            const err = new Error(personalAT.error);
-            err.status = 500;
-            throw err;
+            throw ApiError.validation(personalAT.error, 500);
         }
         if (personalAT.secret !== secret) {
-            const err = new Error('Falha na validação de segurança.');
-            err.status = 403;
-            throw err;
+            throw ApiError.forbidden('Falha na validação de segurança.');
         }
 
         const user = await User.findByPk(personalAT.tokenable_id);
         if (!user) {
-            const err = new Error('Usuário não existe.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não existe.');
         }
         if (!bcrypt.compareSync(oldPassword, user.password)) {
-            const err = new Error('A senha antiga é inválida.');
-            err.status = 401;
-            throw err;
+            throw ApiError.unauthorized('A senha antiga é inválida.');
         }
 
         await user.update({ password: bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10)) });
@@ -284,14 +258,10 @@ class Controller {
     async sendChangeEmailCode(userId, newEmail) {
         const user = await User.findByPk(userId);
         if (!user) {
-            const err = new Error('Usuário não existe.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não existe.');
         }
         if (await User.findOne({ where: { email: newEmail } })) {
-            const err = new Error('Este email já está em uso.');
-            err.status = 409;
-            throw err;
+            throw ApiError.validation('Este email já está em uso.', 409);
         }
 
         const code = Util.generateCode(5);
@@ -309,9 +279,7 @@ class Controller {
             });
         } catch (error) {
             console.error('Erro ao enviar email de confirmação de mudança:', error);
-            const err = new Error('Falha ao enviar email de confirmação de mudança.');
-            err.status = 500;
-            throw err;
+            throw ApiError.internal('Falha ao enviar email de confirmação de mudança.');
         }
         return { message: 'O código de confirmação foi enviado ao novo e-mail com sucesso.' };
     }
@@ -319,31 +287,21 @@ class Controller {
     async changeEmail(currentUserId, email, code, secret) {
         const personalAT = await PersonalAccessTokenController.verifyByCode(code);
         if (personalAT.error) {
-            const err = new Error(personalAT.error);
-            err.status = 500;
-            throw err;
+            throw ApiError.validation(personalAT.error, 500);
         }
         if (personalAT.secret !== secret) {
-            const err = new Error('Falha na validação de segurança.');
-            err.status = 403;
-            throw err;
+            throw ApiError.forbidden('Falha na validação de segurança.');
         }
 
         const user = await User.findByPk(personalAT.tokenable_id);
         if (!user) {
-            const err = new Error('Usuário não existe.');
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound('Usuário não existe.');
         }
         if (String(user.id) !== String(currentUserId)) {
-            const err = new Error('Identidade não confirmada.');
-            err.status = 403;
-            throw err;
+            throw ApiError.forbidden('Identidade não confirmada.');
         }
         if (await User.findOne({ where: { email } })) {
-            const err = new Error('Este email já está em uso.');
-            err.status = 409;
-            throw err;
+            throw ApiError.validation('Este email já está em uso.', 409);
         }
 
         await user.update({ email });

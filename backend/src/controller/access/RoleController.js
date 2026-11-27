@@ -1,14 +1,13 @@
 import { Role } from "../../model/access/role.js";
 import { Op } from 'sequelize';
+import { ApiError } from '../../contracts/Error.js';
 
 class Controller {
 
 	async find(name) {
         const role = await Role.findOne({ where: { name } });
         if (!role) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
         return role;
 	}
@@ -16,9 +15,7 @@ class Controller {
     async findById(roleId) {
         const role = await Role.findByPk(roleId);
         if (!role) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
         return role;
     }
@@ -40,9 +37,7 @@ class Controller {
         });
 
         if (role.length == 0 ) {
-            const err = new Error("Não há roles registrados(a).");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não há roles registrados(a).");
         }
 
         return {
@@ -92,9 +87,7 @@ class Controller {
         const [updatedCount] = await Role.update(fieldsToUpdate, { where: { id: roleId } });
 
         if (updatedCount === 0) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
 
         return await this.findById(roleId);
@@ -104,9 +97,7 @@ class Controller {
 		// Deleta registro
 		const deletedCount = await Role.destroy({ where: { id: roleId } });
         if (deletedCount === 0) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
         return { message: "Deletado com sucesso." };
 	}
@@ -115,9 +106,7 @@ class Controller {
 		// Alterna status booleano
 		const role = await Role.findByPk(roleId);
         if (!role) {
-            const err = new Error("Não encontrado.");
-            err.status = 404;
-            throw err;
+            throw ApiError.notFound("Não encontrado.");
         }
 
 		const newStatus = !role.status;
