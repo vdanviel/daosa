@@ -11,25 +11,6 @@ import { api, ApiError, type IntegrationRecord } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
-
-type ProviderInfo = {
-  name: string;
-  icon: string;
-};
-
-const PROVIDERS: Record<string, ProviderInfo> = {
-  google: { name: 'Google Drive', icon: '/images/google-drive.png' },
-  whatsapp: { name: 'WhatsApp', icon: '/images/whatsapp.png' },
-  discord: { name: 'Discord', icon: '/images/discord.png' },
-  telegram: { name: 'Telegram', icon: '/images/telegram.png' },
-  mcp: { name: 'MCP', icon: '/images/mcp.svg' }
-};
-
-function getProvider(provider: string): ProviderInfo {
-  return PROVIDERS[provider] ?? { name: provider, icon: '' };
-}
-
-
 function statusInfo(status: string): {
   label: string;
   variant: 'default' | 'secondary' | 'destructive' | 'outline';
@@ -183,7 +164,6 @@ export default function IntegrationsPage() {
                 </TableHeader>
                 <TableBody>
                   {integrations.map((integration) => {
-                    const provider = getProvider(integration.provider);
                     const info = statusInfo(integration.status);
 
                     return (
@@ -191,14 +171,15 @@ export default function IntegrationsPage() {
 
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {provider.icon && (
-                              <img
-                                src={provider.icon}
-                                alt={provider.name}
-                                className="h-5 w-5 rounded"
-                              />
-                            )}
-                            <p className="text-sm text-foreground">{provider.name}</p>
+                            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                              {integration.icon_url && (
+                                <img
+                                  src={api.baseUrl + integration.icon_url}
+                                  className="h-5 w-5"
+                                />
+                              )}
+                            </div>
+                            <p className="text-sm text-foreground">{integration.label}</p>
                           </div>
                         </TableCell>
 

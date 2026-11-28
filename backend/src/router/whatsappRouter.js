@@ -44,12 +44,16 @@ WhatsappRouter.post('/connect', isAuth, async (req, res, next) => {
 
         if (integration) {
             integration.status = 'processing';
+            integration.icon_url = "/public/images/whatsapp-logo.png";
+            integration.credentials = null;
             integration.channel_id = whatsappChannel.id
             integration.metadata = { ...(integration.metadata || {}), connect_code };
             await integration.save();
         } else {
             integration = await Integration.create({
                 user_id: user_id,
+                icon_url: "/public/images/whatsapp-logo.png",
+                credentials: null,
                 channel_id: whatsappChannel.id,
                 provider: 'whatsapp',
                 label: 'WhatsApp',

@@ -45,6 +45,7 @@ DiscordRouter.post('/connect', [
       integration.status = 'processing';
       integration.channel_id = discordChannel.id
       integration.credentials = null;
+      integration.icon_url = "/public/images/discord-logo.png";
       integration.metadata = {
         ...(integration.metadata || {}),
         antifraud_onboard_code: randCode
@@ -53,7 +54,9 @@ DiscordRouter.post('/connect', [
     } else {
       integration = await Integration.create({
         user_id: user_id,
+        icon_url:  "/public/images/discord-logo.png",
         channel_id: discordChannel.id,
+        credentials: null,
         provider: 'discord',
         label: 'Discord',
         auth_type: 'oauth2',
