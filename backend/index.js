@@ -5,7 +5,6 @@ import session from 'express-session';
 import swaggerUi from 'swagger-ui-express';
 import { fileURLToPath } from 'node:url';
 import { connectDatabase } from './src/connection/database.js';
-import { errorHandler } from './src/middleware/errorHandler.js';
 import { initializeChannels } from './src/model/channel.js';
 import { version1Router } from './src/router/version/version1Router.js';
 import Env from './src/util/Env.js';
