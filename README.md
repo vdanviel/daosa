@@ -86,13 +86,15 @@ Para alinhar todos os conteiners.
 
 1. Crie uma branch a partir de `main`: `feat/nome-da-feature` (ou `fix/`, `docs/`, `refactor/`, etc...)
 2. Faça commits seguindo o padrão Angular:
-   - `feat:` — nova funcionalidade
-   - `fix:` — correção de bug
-   - `docs:` — documentação
-   - `refactor:` — refatoração sem mudança de comportamento
-   - `perf:` — melhoria de performance
-   - `test:` — testes
-   - `chore:` — tarefas de manutenção/build (ex.: atualizar dependências, configurar CI/CD, ajustar `.gitignore`, limpeza de arquivos)
+  - `feat:` — nova funcionalidade
+  - `html:` — mudança no conteúdo do frontend
+  - `style:` — mudança no estilo do frontend
+  - `fix:` — correção de bug
+  - `docs:` — documentação
+  - `refactor:` — refatoração sem mudança de comportamento
+  - `perf:` — melhoria de performance
+  - `test:` — testes
+  - `chore:` — tarefas de manutenção/build (ex.: atualizar dependências, configurar CI/CD, ajustar `.gitignore`, limpeza de arquivos)
 3. Abra um Pull Request (PR) para `main`
 4. Aguarde revisão, aprovação e merge
 
