@@ -11,7 +11,7 @@
 import { Env } from './env';
 
 /** Relativo por padrão: passa pelo proxy do Next (`app/api/[...path]`). */
-const BASE_URL = (Env.get('API_BASE_URL') || '/api').replace(/\/+$/, '') + '/v1';
+const baseUriPath = (Env.get('API_BASE_URL') || '/api').replace(/\/+$/, '') + '/v1';
 
 export interface User {
   id: string;
@@ -89,7 +89,7 @@ async function request<T = any>(
   path: string,
   opts: { body?: any; query?: Record<string, any>; auth?: boolean } = {}
 ): Promise<T> {
-  let url = `${BASE_URL}${path}`;
+  let url = `${baseUriPath}${path}`;
 
   if (opts.query) {
     const qs = new URLSearchParams();
@@ -334,9 +334,14 @@ export class Api {
   discord = new DiscordApi();
   source = new SourceApi();
 
-  get baseURL() {
-    return BASE_URL;
+  get basePath() {
+    return baseUriPath;
   }
+
+  get baseUrl(){
+    return Env.get('API_BASE_URL')
+  }
+
 }
 
 /** Instância única — use este objeto em todo o SPA. */

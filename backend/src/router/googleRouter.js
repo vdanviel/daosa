@@ -31,7 +31,9 @@ GoogleRouter.post('/consent-screen', [
 
     if (integration) {
         integration.status = 'processing';
+        integration.channel_id = null;
         integration.credentials = null;
+        integration.icon_url = "/public/images/google-logo.png";
         integration.metadata = {
             ...(integration.metadata || {}),
             antifraud_onboard_code: randCode
@@ -42,6 +44,9 @@ GoogleRouter.post('/consent-screen', [
 
         integration.user_id = req.auth.data.sub;
         integration.provider = 'google';
+        integration.channel_id = null;
+        integration.credentials = null;
+        integration.icon_url = "/public/images/google-logo.png";
         integration.label = "Conta Google";
         integration.auth_type = "oauth2";
         integration.status = "processing";

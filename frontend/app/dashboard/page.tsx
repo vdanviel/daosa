@@ -266,14 +266,21 @@ export default function DashboardPage() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {integrations.slice(0, 2).map((it) => {
+
                 const connected = it.status === 'active';
+
                 return (
                   <div
                     key={it.id}
                     className="flex items-center gap-3 rounded-xl border border-border/60 bg-card p-3 transition-colors hover:border-primary/40"
                   >
                     <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                      <FolderOpen className="h-5 w-5" />
+                      {it.icon_url && (
+                        <img
+                          src={api.baseUrl + it.icon_url}
+                          className="h-5 w-5"
+                        />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-foreground">
@@ -281,7 +288,7 @@ export default function DashboardPage() {
                       </div>
                       <Badge
                         variant={connected ? 'default' : 'secondary'}
-                        className={`shrink-0 ${connected ? 'bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30' : ''}`}
+                        className={` ${connected ? 'bg-green-500/15 text-green-600 border border-green-500/30' : ''}`}
                       >
                         {connected ? 'Conectado' : 'Pendente'}
                       </Badge>

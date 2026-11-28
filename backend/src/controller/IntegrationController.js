@@ -1,21 +1,25 @@
 import { Integration } from '../model/integration.js';
 import { refreshGoogleCredentials } from '../connection/google.js';
 import { ApiError } from '../contracts/Error.js';
-import { Op } from "sequelize";
-
 class Controller {
 
     async findByUser(user_id, provider) {
         return Integration.findOne({
             where: { user_id, provider },
-            attributes: { exclude: ['credentials', 'metadata'] }
+            attributes: { exclude: ['credentials', 'channel_id'] },
+            include: [{
+                association: 'channel'
+            }]
         });
     }
 
     async findAllByUser(user_id) {
         return Integration.findAll({
             where: { user_id },
-            attributes: { exclude: ['credentials', 'metadata'] }
+            attributes: { exclude: ['credentials', 'channel_id'] },
+            include: [{
+                association: 'channel'
+            }]
         });
     }
 

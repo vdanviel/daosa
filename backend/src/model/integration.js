@@ -10,6 +10,7 @@ const Integration = sequelize.define('Integration',
     channel_id: { type: DataTypes.BIGINT.UNSIGNED, allowNull: true },
     provider: { type: DataTypes.STRING(50), allowNull: false },
     label: { type: DataTypes.STRING(150), allowNull: true },
+    icon_url: { type: DataTypes.STRING(2000), allowNull: true },
     auth_type: {
       type: DataTypes.ENUM('none', 'api_key', 'oauth2', 'basic'),
       allowNull: false,
